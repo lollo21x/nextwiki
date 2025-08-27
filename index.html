@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>nextwiki</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Courier+Prime&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --font-sans: 'Inter', sans-serif;
+        --font-mono: 'Courier Prime', monospace;
+
+        /* Dark Theme (Default) */
+        --bg: #0D0D0D;
+        --text-primary: #EAEAEA;
+        --text-secondary: #888888;
+        --accent: #4c82f8;
+        --surface: rgba(255, 255, 255, 0.05);
+        --border: rgba(255, 255, 255, 0.1);
+        --logo-url: url('https://res.cloudinary.com/dk0f2y0hu/image/upload/v1756230099/Polygon_1_d88p22.png');
+      }
+
+      html.light-theme {
+        --bg: #F5F5F7;
+        --text-primary: #1D1D1F;
+        --text-secondary: #6E6E73;
+        --accent: #0066CC;
+        --surface: rgba(0, 0, 0, 0.03);
+        --border: rgba(0, 0, 0, 0.1);
+        --logo-url: url('https://res.cloudinary.com/dk0f2y0hu/image/upload/v1756230169/Polygon_1_murjcz.png');
+      }
+
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
+      @keyframes blink { from, to { opacity: 1 } 50% { opacity: 0; } }
+
+      body {
+        background-color: var(--bg);
+        color: var(--text-primary);
+        font-family: var(--font-sans);
+        font-size: 1.1rem;
+        line-height: 1.7;
+        margin: 0;
+        padding: 2rem 2rem 7rem 2rem;
+        overflow-x: hidden;
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+
+      #root {
+        max-width: 70ch;
+        margin: auto;
+      }
+
+      h1, h2 { font-size: 1em; margin: 0; font-weight: 500; }
+      button { background: none; border: none; padding: 0; font: inherit; color: inherit; cursor: pointer; }
+
+      .app-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3rem;
+        animation: fadeIn 0.5s ease-out;
+      }
+
+      .logo-container {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        text-decoration: none;
+        color: var(--text-primary);
+        cursor: pointer;
+      }
+      .logo-container h1 { font-size: 1.5rem; font-weight: 500; letter-spacing: -0.02em; }
+      .logo-image {
+        width: 24px;
+        height: 24px;
+        background-image: var(--logo-url);
+        background-size: contain;
+        background-repeat: no-repeat;
+        transition: background-image 0.3s ease;
+      }
+      .theme-toggle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--surface);
+        border: 1px solid var(--border);
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+      }
+      .theme-toggle:hover { background-color: var(--accent); border-color: var(--accent); }
+      .theme-toggle svg { transition: fill 0.2s ease; }
+      html.dark-theme .theme-toggle:hover svg { fill: var(--bg); }
+      html.light-theme .theme-toggle:hover svg { fill: var(--bg); }
+
+
+      .search-container {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.5rem 0.75rem;
+        background-color: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        position: sticky;
+        top: 1rem;
+        z-index: 10;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        margin-bottom: 2rem;
+      }
+      .search-form { flex-grow: 1; display: flex; align-items: center; gap: 0.5rem; }
+      .search-icon { width: 20px; height: 20px; color: var(--text-secondary); }
+      .search-input { width: 100%; padding: 0.5rem; font-size: 1.1rem; color: inherit; border: none; background-color: transparent; box-sizing: border-box; outline: none; }
+      .search-input:disabled { color: var(--text-secondary); }
+      .search-input::placeholder { color: var(--text-secondary); opacity: 1; }
+
+      .image-container {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background-color: var(--surface);
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border);
+      }
+      .image-display { width: 100%; height: 100%; object-fit: cover; animation: fadeIn 0.5s ease; }
+      .image-skeleton {
+        width: 100%;
+        height: 100%;
+        background-image: linear-gradient(to right, var(--surface) 0%, var(--border) 20%, var(--surface) 40%, var(--surface) 100%);
+        background-repeat: no-repeat;
+        background-size: 2000px 100%;
+        animation: shimmer 2s linear infinite;
+      }
+      .image-error { color: var(--text-secondary); text-align: center; padding: 1rem; }
+
+      main > div { animation: fadeIn 0.5s ease-out 0.2s; animation-fill-mode: backwards; }
+      .interactive-word {
+        color: var(--text-primary);
+        text-decoration: none;
+        border-bottom: 1px solid var(--border);
+        transition: all 0.2s ease-in-out;
+        padding: 0.1em 0.2em;
+        margin: -0.1em -0.2em;
+        border-radius: 4px;
+      }
+      .interactive-word:hover { color: var(--bg); background-color: var(--accent); border-bottom-color: var(--accent); }
+      .blinking-cursor { color: var(--accent); animation: blink 1s step-end infinite; }
+
+      .skeleton-bar {
+        height: 1rem;
+        background-color: var(--surface);
+        margin-bottom: 0.75rem;
+        border-radius: 4px;
+        background-image: linear-gradient(to right, var(--surface) 0%, var(--border) 20%, var(--surface) 40%, var(--surface) 100%);
+        background-repeat: no-repeat;
+        background-size: 2000px 104px;
+        animation: shimmer 2s linear infinite;
+      }
+      
+      .sticky-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        text-align: center;
+        padding: 1rem 0;
+        border-top: 1px solid var(--border);
+        background-color: rgba(13, 13, 13, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+      html.light-theme .sticky-footer {
+        background-color: rgba(245, 245, 247, 0.7);
+      }
+      .footer-text { font-size: 0.9em; color: var(--text-secondary); }
+      .footer-text a { color: inherit; text-decoration: none; transition: color 0.2s ease-in-out; }
+      .footer-text a:hover { color: var(--accent); text-decoration: underline; }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
