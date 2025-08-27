@@ -5,18 +5,12 @@
 import { LanguageCode, languageNameMap } from '../utils/translations';
 
 // --- OpenRouter Configuration for Text ---
-// WARNING: This key is publicly exposed and should only be used for free, rate-limited, non-production accounts.
-const OPENROUTER_API_KEY = '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';
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+// The check for the API key is moved into the function that uses it
+// to prevent the app from crashing at startup if the key isn't set.
+
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'google/gemini-2.5-flash-image-preview:free';
-
-// These headers are recommended by OpenRouter for tracking and identification.
-const textHeaders = {
-  'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-  'Content-Type': 'application/json',
-  'HTTP-Referer': 'https://nextwiki.github.io', // Replace with your site URL
-  'X-Title': 'NextWiki', // Replace with your app name
-};
 // --- End Text Configuration ---
 
 // --- Pexels Configuration for Images ---
@@ -35,6 +29,21 @@ export async function* streamDefinition(
   topic: string,
   language: LanguageCode,
 ): AsyncGenerator<string, void, undefined> {
+  if (!OPENROUTER_API_KEY) {
+    const errorMsg = 'Error: OPENROUTER_API_KEY is not configured. Please set it as an environment variable in your deployment settings.';
+    console.error(errorMsg);
+    yield errorMsg;
+    return;
+  }
+  
+  // These headers are recommended by OpenRouter for tracking and identification.
+  const textHeaders = {
+    'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+    'Content-Type': 'application/json',
+    'HTTP-Referer': 'https://nextwiki.github.io', // Replace with your site URL
+    'X-Title': 'NextWiki', // Replace with your app name
+  };
+  
   const fullLanguageName = languageNameMap[language] || 'English';
   const prompt = `Provide a concise, single-paragraph encyclopedia-style definition for the term: "${topic}". The response must be in ${fullLanguageName}. Be informative and neutral. Do not use markdown, titles, or any special formatting. Respond with only the text of the definition itself.`;
 
