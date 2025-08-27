@@ -7,9 +7,10 @@ import React, { useState } from 'react';
 interface SearchBarProps {
   onSearch: (query: string) => void;
   isLoading: boolean;
+  placeholder: string;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading, placeholder }) => {
   const [query, setQuery] = useState('');
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -40,7 +41,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search"
+          placeholder={placeholder}
           className="search-input"
           aria-label="Search for a topic"
           disabled={isLoading}

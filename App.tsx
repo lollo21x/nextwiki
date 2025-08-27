@@ -9,6 +9,9 @@ import ContentDisplay from './components/ContentDisplay';
 import SearchBar from './components/SearchBar';
 import LoadingSkeleton from './components/LoadingSkeleton';
 import ImageDisplay from './components/ImageDisplay';
+import HistoryDisplay from './components/HistoryDisplay';
+import SettingsModal from './components/SettingsModal';
+import { translations, LanguageCode } from './utils/translations';
 
 const App: React.FC = () => {
   const [currentTopic, setCurrentTopic] = useState<string>('wiki');
@@ -18,24 +21,66 @@ const App: React.FC = () => {
   const [imageError, setImageError] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [generationTime, setGenerationTime] = useState<number | null>(null);
-  const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('theme') || 'dark';
-  });
+  const [history, setHistory] = useState<string[]>([]);
+
+  // --- Settings State ---
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  const [accentColor, setAccentColor] = useState(() => localStorage.getItem('accentColor') || 'default');
+  const [language, setLanguage] = useState<LanguageCode>(() => (localStorage.getItem('language') || 'en') as LanguageCode);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  // --- End Settings State ---
+
+  const t = translations[language];
 
   useEffect(() => {
-    if (theme === 'light') {
-      document.documentElement.classList.add('light-theme');
-      document.documentElement.classList.remove('dark-theme');
-    } else {
-      document.documentElement.classList.remove('light-theme');
-      document.documentElement.classList.add('dark-theme');
+    try {
+      const storedHistory = localStorage.getItem('searchHistory');
+      if (storedHistory) setHistory(JSON.parse(storedHistory));
+    } catch (e) {
+      console.error("Failed to parse history from localStorage", e);
+      setHistory([]);
     }
+  }, []);
+
+  useEffect(() => {
+    if (history.length > 0) {
+      localStorage.setItem('searchHistory', JSON.stringify(history));
+    }
+  }, [history]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('light-theme', theme === 'light');
+    document.documentElement.classList.toggle('dark-theme', theme === 'dark');
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-accent-color', accentColor);
+    localStorage.setItem('accentColor', accentColor);
+  }, [accentColor]);
+  
+  useEffect(() => {
+    localStorage.setItem('language', language);
+  }, [language]);
+
 
   const toggleTheme = () => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
   };
+
+  const handleTopicChange = useCallback((topic: string) => {
+    const newTopic = topic.trim();
+    if (newTopic && newTopic.toLowerCase() !== currentTopic.toLowerCase()) {
+      setCurrentTopic(newTopic);
+      
+      setHistory(prevHistory => {
+        const normalizedNewTopic = newTopic.toLowerCase();
+        const filteredHistory = prevHistory.filter(item => item.toLowerCase() !== normalizedNewTopic);
+        const updatedHistory = [newTopic, ...filteredHistory];
+        return updatedHistory.slice(0, 10);
+      });
+    }
+  }, [currentTopic]);
 
   useEffect(() => {
     if (!currentTopic) return;
@@ -52,9 +97,7 @@ const App: React.FC = () => {
       const startTime = performance.now();
 
       generateImage(currentTopic)
-        .then(url => {
-          if (!isCancelled) setImageUrl(url);
-        })
+        .then(url => { if (!isCancelled) setImageUrl(url); })
         .catch(err => {
           if (!isCancelled) {
             const msg = err instanceof Error ? err.message : 'Failed to generate image.';
@@ -65,7 +108,7 @@ const App: React.FC = () => {
 
       let accumulatedContent = '';
       try {
-        for await (const chunk of streamDefinition(currentTopic)) {
+        for await (const chunk of streamDefinition(currentTopic, language)) {
           if (isCancelled) break;
           if (chunk.startsWith('Error:')) throw new Error(chunk);
           accumulatedContent += chunk;
@@ -90,24 +133,19 @@ const App: React.FC = () => {
     fetchContentAndImage();
     
     return () => { isCancelled = true; };
-  }, [currentTopic]);
-
-  const handleTopicChange = useCallback((topic: string) => {
-    const newTopic = topic.trim();
-    if (newTopic && newTopic.toLowerCase() !== currentTopic.toLowerCase()) {
-      setCurrentTopic(newTopic);
-    }
-  }, [currentTopic]);
+  }, [currentTopic, language]);
 
   const handleHomeClick = () => handleTopicChange('wiki');
 
+  const handleSaveSettings = (settings: { accentColor: string; language: LanguageCode }) => {
+    setAccentColor(settings.accentColor);
+    setLanguage(settings.language);
+    setIsSettingsOpen(false);
+  };
+
   const ThemeIcon = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      {theme === 'dark' ? (
-        <path d="M12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8V16Z" />
-      ) : (
-        <path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" />
-      )}
+      {theme === 'dark' ? <path d="M12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8V16Z" /> : <path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" />}
       <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM12 20C7.58172 20 4 16.4183 4 12C4 7.58172 7.58172 4 12 4C16.4183 4 20 7.58172 20 12C20 16.4183 16.4183 20 12 20Z" />
     </svg>
   );
@@ -119,14 +157,21 @@ const App: React.FC = () => {
           <div className="logo-image"></div>
           <h1>nextwiki</h1>
         </div>
-        <button onClick={toggleTheme} className="theme-toggle" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
-          <ThemeIcon />
-        </button>
+        <div className="header-controls">
+          <button onClick={toggleTheme} className="theme-toggle" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
+            <ThemeIcon />
+          </button>
+          <button onClick={() => setIsSettingsOpen(true)} className="settings-toggle" aria-label="Open settings">
+            <div className="settings-icon-img"></div>
+          </button>
+        </div>
       </header>
       
-      <SearchBar onSearch={handleTopicChange} isLoading={isLoading} />
+      <SearchBar onSearch={handleTopicChange} isLoading={isLoading} placeholder={t.search} />
       
       <main>
+        <HistoryDisplay history={history} onHistoryClick={handleTopicChange} title={t.recent} />
+
         <ImageDisplay imageUrl={imageUrl} topic={currentTopic} isLoading={isLoading && !imageUrl} error={imageError} />
 
         <div>
@@ -135,7 +180,7 @@ const App: React.FC = () => {
           </h2>
 
           {error && (
-            <div style={{ border: '1px solid #cc0000', padding: '1rem', color: '#cc0000', borderRadius: '8px' }}>
+            <div className="error-box">
               <p style={{ margin: 0 }}>An Error Occurred</p>
               <p style={{ marginTop: '0.5rem', margin: 0 }}>{error}</p>
             </div>
@@ -161,10 +206,20 @@ const App: React.FC = () => {
 
       <footer className="sticky-footer">
         <p className="footer-text" style={{ margin: 0 }}>
-          Made by <a href="http://lollo.dpdns.org" target="_blank" rel="noopener noreferrer">lollo21</a> · Content by OpenRouter
+          {t.madeBy} <a href="http://lollo.dpdns.org" target="_blank" rel="noopener noreferrer">lollo21</a> · {t.generatedBy}
           {generationTime && ` · ${Math.round(generationTime)}ms`}
         </p>
       </footer>
+      
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)}
+        accentColor={accentColor}
+        language={language}
+        onSave={handleSaveSettings}
+        translations={t}
+      />
+
     </div>
   );
 };
