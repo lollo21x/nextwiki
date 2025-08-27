@@ -4,20 +4,14 @@
 */
 import { LanguageCode, languageNameMap } from '../utils/translations';
 
-// --- OpenRouter Configuration for Text ---
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-// The check for the API key is moved into the function that uses it
-// to prevent the app from crashing at startup if the key isn't set.
-
+// --- OpenRouter Configuration ---
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'google/gemini-2.5-flash-image-preview:free';
-// --- End Text Configuration ---
+// --- End OpenRouter Configuration ---
 
 // --- Pexels Configuration for Images ---
 const PEXELS_API_KEY = 'P0JY9qNicegGHGtqSUzvvgXuqYKJz5VSfLcjDUeMk0V4BB3S5yVkwGZg';
 const PEXELS_API_URL = 'https://api.pexels.com/v1/search';
 // --- End Image Configuration ---
-
 
 /**
  * Streams a definition for a given topic from the OpenRouter API.
@@ -29,6 +23,8 @@ export async function* streamDefinition(
   topic: string,
   language: LanguageCode,
 ): AsyncGenerator<string, void, undefined> {
+  const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+
   if (!OPENROUTER_API_KEY) {
     const errorMsg = 'Error: OPENROUTER_API_KEY is not configured. Please set it as an environment variable in your deployment settings.';
     console.error(errorMsg);
@@ -36,39 +32,42 @@ export async function* streamDefinition(
     return;
   }
   
-  // These headers are recommended by OpenRouter for tracking and identification.
-  const textHeaders = {
-    'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-    'Content-Type': 'application/json',
-    'HTTP-Referer': 'https://nextwiki.github.io', // Replace with your site URL
-    'X-Title': 'NextWiki', // Replace with your app name
-  };
-  
   const fullLanguageName = languageNameMap[language] || 'English';
   const prompt = `Provide a concise, single-paragraph encyclopedia-style definition for the term: "${topic}". The response must be in ${fullLanguageName}. Be informative and neutral. Do not use markdown, titles, or any special formatting. Respond with only the text of the definition itself.`;
 
   try {
     const response = await fetch(OPENROUTER_API_URL, {
       method: 'POST',
-      headers: textHeaders,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+      },
       body: JSON.stringify({
-        model: MODEL,
+        model: 'google/gemini-flash-1.5',
         messages: [{ role: 'user', content: prompt }],
         stream: true,
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${await response.text()}`);
+      const errorText = await response.text();
+      console.error('OpenRouter API Error:', errorText);
+      throw new Error(`API request failed with status ${response.status}: ${errorText}`);
     }
 
-    const reader = response.body!.getReader();
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Could not get response body reader.');
+    }
+
     const decoder = new TextDecoder();
     let buffer = '';
 
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        break;
+      }
 
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
@@ -76,18 +75,18 @@ export async function* streamDefinition(
 
       for (const line of lines) {
         if (line.startsWith('data: ')) {
-          const data = line.substring(6);
-          if (data === '[DONE]') {
+          const jsonStr = line.substring(6);
+          if (jsonStr === '[DONE]') {
             return;
           }
           try {
-            const json = JSON.parse(data);
-            const content = json.choices[0]?.delta?.content;
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices[0]?.delta?.content;
             if (content) {
               yield content;
             }
           } catch (e) {
-            console.error('Failed to parse stream chunk:', data);
+            console.error('Failed to parse stream chunk:', jsonStr, e);
           }
         }
       }
@@ -96,7 +95,6 @@ export async function* streamDefinition(
     console.error('Error streaming from OpenRouter:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
     yield `Error: Could not generate content for "${topic}". ${errorMessage}`;
-    throw new Error(errorMessage);
   }
 }
 
