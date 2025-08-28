@@ -4,7 +4,7 @@
 */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { streamDefinition, generateImage } from './services/geminiService';
+import { streamDefinition, generateImage, GenerationMode } from './services/geminiService';
 import ContentDisplay from './components/ContentDisplay';
 import SearchBar from './components/SearchBar';
 import LoadingSkeleton from './components/LoadingSkeleton';
@@ -22,11 +22,12 @@ const App: React.FC = () => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [generationTime, setGenerationTime] = useState<number | null>(null);
   const [history, setHistory] = useState<string[]>([]);
-
+  
   // --- Settings State ---
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const [accentColor, setAccentColor] = useState(() => localStorage.getItem('accentColor') || 'default');
   const [language, setLanguage] = useState<LanguageCode>(() => (localStorage.getItem('language') || 'en') as LanguageCode);
+  const [generationMode, setGenerationMode] = useState<GenerationMode>(() => (localStorage.getItem('generationMode') || 'encyclopedia') as GenerationMode);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   // --- End Settings State ---
 
@@ -62,6 +63,10 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('language', language);
   }, [language]);
+  
+  useEffect(() => {
+    localStorage.setItem('generationMode', generationMode);
+  }, [generationMode]);
 
 
   const toggleTheme = () => {
@@ -108,7 +113,7 @@ const App: React.FC = () => {
 
       let accumulatedContent = '';
       try {
-        for await (const chunk of streamDefinition(currentTopic, language)) {
+        for await (const chunk of streamDefinition(currentTopic, language, generationMode)) {
           if (isCancelled) break;
           if (chunk.startsWith('Error:')) throw new Error(chunk);
           accumulatedContent += chunk;
@@ -118,7 +123,7 @@ const App: React.FC = () => {
         if (!isCancelled) {
           const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred';
           setError(errorMessage);
-          setContent('');
+setContent('');
           console.error(e);
         }
       } finally {
@@ -133,13 +138,14 @@ const App: React.FC = () => {
     fetchContentAndImage();
     
     return () => { isCancelled = true; };
-  }, [currentTopic, language]);
+  }, [currentTopic, language, generationMode]);
 
   const handleHomeClick = () => handleTopicChange('wiki');
 
-  const handleSaveSettings = (settings: { accentColor: string; language: LanguageCode }) => {
+  const handleSaveSettings = (settings: { accentColor: string; language: LanguageCode; generationMode: GenerationMode }) => {
     setAccentColor(settings.accentColor);
     setLanguage(settings.language);
+    setGenerationMode(settings.generationMode);
     setIsSettingsOpen(false);
   };
 
@@ -216,6 +222,7 @@ const App: React.FC = () => {
         onClose={() => setIsSettingsOpen(false)}
         accentColor={accentColor}
         language={language}
+        generationMode={generationMode}
         onSave={handleSaveSettings}
         translations={t}
       />

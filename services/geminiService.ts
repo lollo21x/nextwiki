@@ -6,6 +6,7 @@ import { LanguageCode, languageNameMap } from '../utils/translations';
 
 // --- OpenRouter Configuration ---
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const OPENROUTER_API_KEY = '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';
 // --- End OpenRouter Configuration ---
 
 // --- Pexels Configuration for Images ---
@@ -13,27 +14,42 @@ const PEXELS_API_KEY = 'P0JY9qNicegGHGtqSUzvvgXuqYKJz5VSfLcjDUeMk0V4BB3S5yVkwGZg
 const PEXELS_API_URL = 'https://api.pexels.com/v1/search';
 // --- End Image Configuration ---
 
+export type GenerationMode = 'encyclopedia' | 'eli5' | 'practicalExamples' | 'stepByStep' | 'summary' | 'funFacts';
+
+const getPromptForMode = (topic: string, language: LanguageCode, mode: GenerationMode): string => {
+  const fullLanguageName = languageNameMap[language] || 'English';
+  const commonInstructions = `The response must be in ${fullLanguageName}. Be informative. Do not use markdown, titles, or any special formatting. Respond with only the text of the response itself.`;
+
+  switch (mode) {
+    case 'eli5':
+      return `Explain the term "${topic}" in 2-3 simple sentences, with common words, as if you were explaining it to a 5-year-old child. ${commonInstructions}`;
+    case 'practicalExamples':
+      return `Provide a concise explanation of "${topic}" (around 3-4 sentences) focused on its practical applications and real-world examples. ${commonInstructions}`;
+    case 'stepByStep':
+      return `Explain how "${topic}" works or is done in a maximum of 5 clear, sequential steps. Start each step on a new line with a number (1., 2., 3., ...). ${commonInstructions}`;
+    case 'summary':
+      return `Provide a schematic summary of the key points for "${topic}". Present it as a short, unordered list of 3-5 points. Start each point on a new line with a bullet point (·). ${commonInstructions}`;
+    case 'funFacts':
+      return `Provide a short, unordered list of 3-5 interesting and little-known fun facts about "${topic}". Start each fact on a new line with a bullet point (·). ${commonInstructions}`;
+    case 'encyclopedia':
+    default:
+      return `Provide a concise (around 4-6 sentences), technical, precise, and complete encyclopedia-style single-paragraph definition for the term: "${topic}". Be neutral. ${commonInstructions}`;
+  }
+};
+
 /**
  * Streams a definition for a given topic from the OpenRouter API.
  * @param topic The word or term to define.
  * @param language The language for the response.
+ * @param mode The generation mode for the content.
  * @returns An async generator that yields text chunks of the definition.
  */
 export async function* streamDefinition(
   topic: string,
   language: LanguageCode,
+  mode: GenerationMode,
 ): AsyncGenerator<string, void, undefined> {
-  const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-
-  if (!OPENROUTER_API_KEY) {
-    const errorMsg = 'Error: OPENROUTER_API_KEY is not configured. Please set it as an environment variable in your deployment settings.';
-    console.error(errorMsg);
-    yield errorMsg;
-    return;
-  }
-  
-  const fullLanguageName = languageNameMap[language] || 'English';
-  const prompt = `Provide a concise, single-paragraph encyclopedia-style definition for the term: "${topic}". The response must be in ${fullLanguageName}. Be informative and neutral. Do not use markdown, titles, or any special formatting. Respond with only the text of the definition itself.`;
+  const prompt = getPromptForMode(topic, language, mode);
 
   try {
     const response = await fetch(OPENROUTER_API_URL, {
@@ -43,7 +59,7 @@ export async function* streamDefinition(
         'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'google/gemini-flash-1.5',
+        model: 'google/gemini-2.5-flash-image-preview:free',
         messages: [{ role: 'user', content: prompt }],
         stream: true,
       }),
