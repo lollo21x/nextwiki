@@ -322,5 +322,28 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
+      // TODO: Add SDKs for Firebase products that you want to use
+      // https://firebase.google.com/docs/web/setup#available-libraries
+
+      // Your web app's Firebase configuration
+      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+      const firebaseConfig = {
+        apiKey: "AIzaSyA27qqn90L4cs21nnlk9v3Erf6Svo82lQY",
+        authDomain: "doot-inc.firebaseapp.com",
+        projectId: "doot-inc",
+        storageBucket: "doot-inc.firebasestorage.app",
+        messagingSenderId: "361145205770",
+        appId: "1:361145205770:web:bdde7c640f13554505cbf3",
+        measurementId: "G-H3KQS6TBLT"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+    </script>
   </body>
 </html>
