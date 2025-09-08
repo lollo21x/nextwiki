@@ -13,12 +13,16 @@ interface SearchBarProps {
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading, placeholder }) => {
   const [query, setQuery] = useState('');
 
+  const handleSearch = (searchTerm: string) => {
+    if (searchTerm.trim() && !isLoading) {
+      onSearch(searchTerm.trim());
+      setQuery('');
+    }
+  };
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (query.trim() && !isLoading) {
-      onSearch(query.trim());
-      setQuery(''); // Clear the input field after search
-    }
+    handleSearch(query);
   };
 
   return (
@@ -45,6 +49,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading, placeholder 
           className="search-input"
           aria-label="Search for a topic"
           disabled={isLoading}
+          autoComplete="off"
         />
       </form>
     </div>

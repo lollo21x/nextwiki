@@ -59,7 +59,7 @@ export async function* streamDefinition(
         'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image-preview:free',
+        model: 'mistralai/mistral-small-3.2-24b-instruct:free',
         messages: [{ role: 'user', content: prompt }],
         stream: true,
       }),

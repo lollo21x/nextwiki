@@ -13,8 +13,16 @@ import HistoryDisplay from './components/HistoryDisplay';
 import SettingsModal from './components/SettingsModal';
 import { translations, LanguageCode } from './utils/translations';
 
+const getTopicFromURL = (): string => {
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('q')?.trim() || 'wiki';
+  }
+  return 'wiki';
+};
+
 const App: React.FC = () => {
-  const [currentTopic, setCurrentTopic] = useState<string>('wiki');
+  const [currentTopic, setCurrentTopic] = useState<string>(getTopicFromURL);
   const [content, setContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +75,17 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('generationMode', generationMode);
   }, [generationMode]);
+  
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentTopic(getTopicFromURL());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
 
 
   const toggleTheme = () => {
@@ -76,6 +95,11 @@ const App: React.FC = () => {
   const handleTopicChange = useCallback((topic: string) => {
     const newTopic = topic.trim();
     if (newTopic && newTopic.toLowerCase() !== currentTopic.toLowerCase()) {
+      // Update URL without page reload
+      const url = new URL(window.location.toString());
+      url.searchParams.set('q', newTopic);
+      window.history.pushState({ topic: newTopic }, '', url);
+
       setCurrentTopic(newTopic);
       
       setHistory(prevHistory => {
