@@ -11,7 +11,12 @@ import LoadingSkeleton from './components/LoadingSkeleton';
 import ImageDisplay from './components/ImageDisplay';
 import HistoryDisplay from './components/HistoryDisplay';
 import SettingsModal from './components/SettingsModal';
+import { AuthModal } from './components/AuthModal';
+import { useAuth } from './src/hooks/useAuth';
 import { translations, LanguageCode } from './utils/translations';
+import { User, LogOut } from 'lucide-react';
+import { signOut } from 'firebase/auth';
+import { auth } from './src/services/firebase';
 
 const getTopicFromURL = (): string => {
   if (typeof window !== 'undefined') {
@@ -31,13 +36,19 @@ const App: React.FC = () => {
   const [generationTime, setGenerationTime] = useState<number | null>(null);
   const [history, setHistory] = useState<string[]>([]);
   
-  // --- Settings State ---
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
-  const [accentColor, setAccentColor] = useState(() => localStorage.getItem('accentColor') || 'default');
-  const [language, setLanguage] = useState<LanguageCode>(() => (localStorage.getItem('language') || 'en') as LanguageCode);
-  const [generationMode, setGenerationMode] = useState<GenerationMode>(() => (localStorage.getItem('generationMode') || 'encyclopedia') as GenerationMode);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  // --- End Settings State ---
+   // --- Settings State ---
+   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+   const [accentColor, setAccentColor] = useState(() => localStorage.getItem('accentColor') || 'default');
+   const [language, setLanguage] = useState<LanguageCode>(() => (localStorage.getItem('language') || 'en') as LanguageCode);
+   const [generationMode, setGenerationMode] = useState<GenerationMode>(() => (localStorage.getItem('generationMode') || 'encyclopedia') as GenerationMode);
+   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+   // --- End Settings State ---
+
+   // --- Auth State ---
+   const { user, isLoading: authLoading } = useAuth();
+   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+   const [isUserButtonHovered, setIsUserButtonHovered] = useState(false);
+   // --- End Auth State ---
 
   const t = translations[language];
 
@@ -166,12 +177,20 @@ setContent('');
 
   const handleHomeClick = () => handleTopicChange('wiki');
 
-  const handleSaveSettings = (settings: { accentColor: string; language: LanguageCode; generationMode: GenerationMode }) => {
-    setAccentColor(settings.accentColor);
-    setLanguage(settings.language);
-    setGenerationMode(settings.generationMode);
-    setIsSettingsOpen(false);
-  };
+   const handleSaveSettings = (settings: { accentColor: string; language: LanguageCode; generationMode: GenerationMode }) => {
+     setAccentColor(settings.accentColor);
+     setLanguage(settings.language);
+     setGenerationMode(settings.generationMode);
+     setIsSettingsOpen(false);
+   };
+
+   const handleLogout = async () => {
+     try {
+       await signOut(auth);
+     } catch (error) {
+       console.error('Error signing out:', error);
+     }
+   };
 
   const ThemeIcon = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -187,14 +206,46 @@ setContent('');
           <div className="logo-image"></div>
           <h1>nextwiki</h1>
         </div>
-        <div className="header-controls">
-          <button onClick={toggleTheme} className="theme-toggle" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
-            <ThemeIcon />
-          </button>
-          <button onClick={() => setIsSettingsOpen(true)} className="settings-toggle" aria-label="Open settings">
-            <div className="settings-icon-img"></div>
-          </button>
-        </div>
+         <div className="header-controls">
+           {user ? (
+             <button
+               onClick={handleLogout}
+               onMouseEnter={() => setIsUserButtonHovered(true)}
+               onMouseLeave={() => setIsUserButtonHovered(false)}
+               className="user-pill"
+               aria-label="Logout"
+               style={{
+                 display: 'flex',
+                 alignItems: 'center',
+                 gap: '8px',
+                 padding: '8px 12px',
+                 borderRadius: '16px',
+                 backgroundColor: isUserButtonHovered ? 'var(--accent-red)' : 'var(--surface)',
+                 border: '1px solid var(--border)',
+                 color: isUserButtonHovered ? 'white' : 'var(--text-primary)',
+                 fontSize: '0.9rem',
+                 fontWeight: '500',
+                 cursor: 'pointer',
+                 transition: 'all 0.2s ease',
+                 whiteSpace: 'nowrap'
+               }}
+             >
+               <User size={14} />
+               <span>{user.displayName || user.email?.split('@')[0] || 'User'}</span>
+               {isUserButtonHovered && <LogOut size={14} />}
+             </button>
+           ) : (
+             <button onClick={() => setIsAuthModalOpen(true)} className="user-toggle" aria-label="User account">
+               <User size={16} />
+             </button>
+           )}
+           <button onClick={toggleTheme} className="theme-toggle" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
+             <ThemeIcon />
+           </button>
+           <button onClick={() => setIsSettingsOpen(true)} className="settings-toggle" aria-label="Open settings">
+             <div className="settings-icon-img"></div>
+           </button>
+         </div>
       </header>
       
       <SearchBar onSearch={handleTopicChange} isLoading={isLoading} placeholder={t.search} />
@@ -241,17 +292,22 @@ setContent('');
         </p>
       </footer>
       
-      <SettingsModal 
-        isOpen={isSettingsOpen} 
-        onClose={() => setIsSettingsOpen(false)}
-        accentColor={accentColor}
-        language={language}
-        generationMode={generationMode}
-        onSave={handleSaveSettings}
-        translations={t}
-      />
+       <SettingsModal
+         isOpen={isSettingsOpen}
+         onClose={() => setIsSettingsOpen(false)}
+         accentColor={accentColor}
+         language={language}
+         generationMode={generationMode}
+         onSave={handleSaveSettings}
+         translations={t}
+       />
 
-    </div>
+       <AuthModal
+         isOpen={isAuthModalOpen}
+         onClose={() => setIsAuthModalOpen(false)}
+       />
+
+     </div>
   );
 };
 
