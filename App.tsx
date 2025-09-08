@@ -208,28 +208,28 @@ setContent('');
         </div>
          <div className="header-controls">
            {user ? (
-             <button
-               onClick={handleLogout}
-               onMouseEnter={() => setIsUserButtonHovered(true)}
-               onMouseLeave={() => setIsUserButtonHovered(false)}
-               className="user-pill"
-               aria-label="Logout"
-               style={{
-                 display: 'flex',
-                 alignItems: 'center',
-                 gap: '8px',
-                 padding: '8px 12px',
-                 borderRadius: '16px',
-                 backgroundColor: isUserButtonHovered ? 'var(--accent-red)' : 'var(--surface)',
-                 border: '1px solid var(--border)',
-                 color: isUserButtonHovered ? 'white' : 'var(--text-primary)',
-                 fontSize: '0.9rem',
-                 fontWeight: '500',
-                 cursor: 'pointer',
-                 transition: 'all 0.2s ease',
-                 whiteSpace: 'nowrap'
-               }}
-             >
+              <button
+                onClick={handleLogout}
+                onMouseEnter={() => setIsUserButtonHovered(true)}
+                onMouseLeave={() => setIsUserButtonHovered(false)}
+                className="user-pill"
+                aria-label="Logout"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: isUserButtonHovered ? '8px 16px' : '8px 12px',
+                  borderRadius: '16px',
+                  backgroundColor: isUserButtonHovered ? 'var(--accent-red)' : 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  color: isUserButtonHovered ? 'white' : 'var(--text-primary)',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap'
+                }}
+              >
                <User size={14} />
                <span>{user.displayName || user.email?.split('@')[0] || 'User'}</span>
                {isUserButtonHovered && <LogOut size={14} />}
