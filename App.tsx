@@ -14,7 +14,7 @@ import SettingsModal from './components/SettingsModal';
 import { AuthModal } from './components/AuthModal';
 import { useAuth } from './src/hooks/useAuth';
 import { translations, LanguageCode } from './utils/translations';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, Info } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from './src/services/firebase';
 
@@ -206,46 +206,49 @@ setContent('');
           <div className="logo-image"></div>
           <h1>nextwiki</h1>
         </div>
-         <div className="header-controls">
-           {user ? (
-              <button
-                onClick={handleLogout}
-                onMouseEnter={() => setIsUserButtonHovered(true)}
-                onMouseLeave={() => setIsUserButtonHovered(false)}
-                className="user-pill"
-                aria-label="Logout"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: isUserButtonHovered ? '8px 16px' : '8px 12px',
-                  borderRadius: '16px',
-                  backgroundColor: isUserButtonHovered ? 'var(--accent-red)' : 'var(--surface)',
-                  border: '1px solid var(--border)',
-                  color: isUserButtonHovered ? 'white' : 'var(--text-primary)',
-                  fontSize: '0.9rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-               <User size={14} />
-               <span>{user.displayName || user.email?.split('@')[0] || 'User'}</span>
-               {isUserButtonHovered && <LogOut size={14} />}
-             </button>
-           ) : (
-             <button onClick={() => setIsAuthModalOpen(true)} className="user-toggle" aria-label="User account">
-               <User size={16} />
-             </button>
-           )}
-           <button onClick={toggleTheme} className="theme-toggle" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
-             <ThemeIcon />
-           </button>
-           <button onClick={() => setIsSettingsOpen(true)} className="settings-toggle" aria-label="Open settings">
-             <div className="settings-icon-img"></div>
-           </button>
-         </div>
+          <div className="header-controls">
+            <button onClick={() => window.open('https://privacy.dootinc.dpdns.org', '_blank')} className="info-toggle" aria-label="Privacy Policy">
+              <Info size={16} />
+            </button>
+            {user ? (
+               <button
+                 onClick={handleLogout}
+                 onMouseEnter={() => setIsUserButtonHovered(true)}
+                 onMouseLeave={() => setIsUserButtonHovered(false)}
+                 className="user-pill"
+                 aria-label="Logout"
+                 style={{
+                   display: 'flex',
+                   alignItems: 'center',
+                   gap: '8px',
+                   padding: isUserButtonHovered ? '8px 16px' : '8px 12px',
+                   borderRadius: '16px',
+                   backgroundColor: isUserButtonHovered ? 'var(--accent-red)' : 'var(--surface)',
+                   border: '1px solid var(--border)',
+                   color: isUserButtonHovered ? 'white' : 'var(--text-primary)',
+                   fontSize: '0.9rem',
+                   fontWeight: '500',
+                   cursor: 'pointer',
+                   transition: 'all 0.2s ease',
+                   whiteSpace: 'nowrap'
+                 }}
+               >
+                <User size={14} />
+                <span>{user.displayName || user.email?.split('@')[0] || 'User'}</span>
+                {isUserButtonHovered && <LogOut size={14} />}
+              </button>
+            ) : (
+              <button onClick={() => setIsAuthModalOpen(true)} className="user-toggle" aria-label="User account">
+                <User size={16} />
+              </button>
+            )}
+            <button onClick={toggleTheme} className="theme-toggle" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
+              <ThemeIcon />
+            </button>
+            <button onClick={() => setIsSettingsOpen(true)} className="settings-toggle" aria-label="Open settings">
+              <div className="settings-icon-img"></div>
+            </button>
+          </div>
       </header>
       
       <SearchBar onSearch={handleTopicChange} isLoading={isLoading} placeholder={t.search} />

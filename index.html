@@ -110,10 +110,10 @@
       .logo-image { width: 24px; height: 24px; background-image: var(--logo-url); background-size: contain; background-repeat: no-repeat; transition: background-image 0.3s ease; }
       
        .header-controls { display: flex; align-items: center; gap: 0.5rem; }
-       .user-toggle, .theme-toggle, .settings-toggle {
-         width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: var(--surface);
-         border: 1px solid var(--border); transition: background-color 0.2s ease, border-color 0.2s ease;
-       }
+        .user-toggle, .theme-toggle, .info-toggle, .settings-toggle {
+          width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: var(--surface);
+          border: 1px solid var(--border); transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
       
        /* User Toggle Hover */
        .user-toggle:hover {
@@ -135,11 +135,15 @@
          transform: scale(1.02);
        }
 
-       /* Theme Toggle Hover */
-       .theme-toggle:hover { background-color: var(--accent); border-color: var(--accent); }
-       .theme-toggle:hover svg { color: var(--bg); }
+        /* Theme Toggle Hover */
+        .theme-toggle:hover { background-color: var(--accent); border-color: var(--accent); }
+        .theme-toggle:hover svg { color: var(--bg); }
 
-       /* Settings Toggle Hover */
+        /* Info Toggle Hover */
+        .info-toggle:hover { background-color: var(--accent); border-color: var(--accent); }
+        .info-toggle:hover svg { color: var(--bg); }
+
+        /* Settings Toggle Hover */
        .settings-toggle:hover {
          background-color: var(--accent);
          border-color: var(--accent);
