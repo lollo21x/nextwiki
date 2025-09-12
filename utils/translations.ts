@@ -28,6 +28,9 @@ type Translation = {
   save: string;
   generationMode: string;
   modes: Record<GenerationMode, string>;
+  yes: string;
+  no: string;
+  logoutConfirm: string;
 };
 
 export const translations: Record<LanguageCode, Translation> = {
@@ -46,6 +49,9 @@ export const translations: Record<LanguageCode, Translation> = {
       summary: 'Key Points',
       funFacts: 'Fun Facts',
     },
+    yes: 'Yes',
+    no: 'No',
+    logoutConfirm: 'Are you sure you want to log out?',
   },
   it: {
     search: 'Cerca',
@@ -62,6 +68,9 @@ export const translations: Record<LanguageCode, Translation> = {
       summary: 'Sintesi Schematica',
       funFacts: 'Fun Facts',
     },
+    yes: 'Sì',
+    no: 'No',
+    logoutConfirm: 'Sei sicuro di voler effettuare il logout?',
   },
   fr: {
     search: 'Rechercher',
@@ -78,6 +87,9 @@ export const translations: Record<LanguageCode, Translation> = {
       summary: 'Points Clés',
       funFacts: 'Faits Amusants',
     },
+    yes: 'Oui',
+    no: 'Non',
+    logoutConfirm: 'Êtes-vous sûr de vouloir vous déconnecter ?',
   },
   es: {
     search: 'Buscar',
@@ -94,6 +106,9 @@ export const translations: Record<LanguageCode, Translation> = {
       summary: 'Puntos Clave',
       funFacts: 'Datos Curiosos',
     },
+    yes: 'Sí',
+    no: 'No',
+    logoutConfirm: '¿Estás seguro de que quieres cerrar sesión?',
   },
   de: {
     search: 'Suchen',
@@ -110,6 +125,9 @@ export const translations: Record<LanguageCode, Translation> = {
       summary: 'Kernpunkte',
       funFacts: 'Wissenswertes',
     },
+    yes: 'Ja',
+    no: 'Nein',
+    logoutConfirm: 'Sind Sie sicher, dass Sie sich abmelden möchten?',
   },
   ru: {
     search: 'Поиск',
@@ -126,6 +144,9 @@ export const translations: Record<LanguageCode, Translation> = {
       summary: 'Ключевые моменты',
       funFacts: 'Интересные факты',
     },
+    yes: 'Да',
+    no: 'Нет',
+    logoutConfirm: 'Вы уверены, что хотите выйти?',
   },
   ar: {
     search: 'بحث',
@@ -142,6 +163,9 @@ export const translations: Record<LanguageCode, Translation> = {
       summary: 'النقاط الرئيسية',
       funFacts: 'حقائق ممتعة',
     },
+    yes: 'نعم',
+    no: 'لا',
+    logoutConfirm: 'هل أنت متأكد أنك تريد تسجيل الخروج؟',
   },
   zh: {
     search: '搜索',
@@ -158,6 +182,9 @@ export const translations: Record<LanguageCode, Translation> = {
       summary: '要点总结',
       funFacts: '有趣的事实',
     },
+    yes: '是',
+    no: '否',
+    logoutConfirm: '您确定要注销吗？',
   },
   pt: {
     search: 'Pesquisar',
@@ -174,6 +201,9 @@ export const translations: Record<LanguageCode, Translation> = {
       summary: 'Pontos Chave',
       funFacts: 'Curiosidades',
     },
+    yes: 'Sim',
+    no: 'Não',
+    logoutConfirm: 'Tem certeza de que deseja sair?',
   },
   hi: {
     search: 'खोजें',
@@ -190,5 +220,8 @@ export const translations: Record<LanguageCode, Translation> = {
       summary: 'मुख्य बिंदु',
       funFacts: 'रोचक तथ्य',
     },
+    yes: 'हाँ',
+    no: 'नहीं',
+    logoutConfirm: 'क्या आप लॉग आउट करना चाहते हैं?',
   },
 };

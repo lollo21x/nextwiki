@@ -123,7 +123,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         <div>
           <h3 className="modal-section-title">{translations.generationMode}</h3>
           <div className={`custom-select-container ${isModeDropdownOpen ? 'open' : ''}`} ref={modeDropdownRef}>
-            <div className="custom-select-trigger" onClick={() => setIsModeDropdownOpen(!isModeDropdownOpen)}>
+            <div className="custom-select-trigger" onClick={() => setIsModeDropdownOpen(!isModeDropdownOpen)} style={{ borderRadius: '32px' }}>
               <span>{translations.modes[selectedMode]}</span>
               <ArrowDownIcon />
             </div>
@@ -134,6 +134,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     key={mode}
                     className={`custom-select-option ${selectedMode === mode ? 'selected' : ''}`}
                     onClick={() => handleModeSelect(mode)}
+                    style={{ borderRadius: '16px' }}
                   >
                     {translations.modes[mode]}
                   </li>
@@ -146,7 +147,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         <div>
           <h3 className="modal-section-title">Language</h3>
           <div className={`custom-select-container ${isLangDropdownOpen ? 'open' : ''}`} ref={langDropdownRef}>
-            <div className="custom-select-trigger" onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}>
+            <div className="custom-select-trigger" onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)} style={{ borderRadius: '32px' }}>
               <span>{languageNameMap[selectedLang]}</span>
               <ArrowDownIcon />
             </div>
@@ -157,6 +158,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     key={code}
                     className={`custom-select-option ${selectedLang === code ? 'selected' : ''}`}
                     onClick={() => handleLanguageSelect(code)}
+                    style={{ borderRadius: '16px' }}
                   >
                     {name}
                   </li>
@@ -167,7 +169,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
         
         <div className="modal-actions">
-          <button className="save-button" onClick={handleSave}>
+          <button className="save-button" onClick={handleSave} style={{ borderRadius: '32px' }}>
             {translations.save}
           </button>
         </div>

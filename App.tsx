@@ -11,6 +11,7 @@ import LoadingSkeleton from './components/LoadingSkeleton';
 import ImageDisplay from './components/ImageDisplay';
 import HistoryDisplay from './components/HistoryDisplay';
 import SettingsModal from './components/SettingsModal';
+import LogoutModal from './components/LogoutModal';
 import { AuthModal } from './components/AuthModal';
 import { useAuth } from './src/hooks/useAuth';
 import { translations, LanguageCode } from './utils/translations';
@@ -44,11 +45,13 @@ const App: React.FC = () => {
    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
    // --- End Settings State ---
 
-   // --- Auth State ---
-   const { user, isLoading: authLoading } = useAuth();
-   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-   const [isUserButtonHovered, setIsUserButtonHovered] = useState(false);
-   // --- End Auth State ---
+    // --- Auth State ---
+    const { user, isLoading: authLoading } = useAuth();
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+    const [isUserButtonHovered, setIsUserButtonHovered] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+    // --- End Auth State ---
 
   const t = translations[language];
 
@@ -86,7 +89,14 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('generationMode', generationMode);
   }, [generationMode]);
-  
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Handle browser back/forward navigation
   useEffect(() => {
     const handlePopState = () => {
@@ -207,47 +217,53 @@ setContent('');
           <h1>nextwiki</h1>
         </div>
           <div className="header-controls">
-            <button onClick={() => window.open('https://privacy.dootinc.dpdns.org', '_blank')} className="info-toggle" aria-label="Privacy Policy">
-              <Info size={16} />
-            </button>
-            {user ? (
-               <button
-                 onClick={handleLogout}
-                 onMouseEnter={() => setIsUserButtonHovered(true)}
-                 onMouseLeave={() => setIsUserButtonHovered(false)}
-                 className="user-pill"
-                 aria-label="Logout"
-                 style={{
-                   display: 'flex',
-                   alignItems: 'center',
-                   gap: '8px',
-                   padding: isUserButtonHovered ? '8px 16px' : '8px 12px',
-                   borderRadius: '16px',
-                   backgroundColor: isUserButtonHovered ? 'var(--accent-red)' : 'var(--surface)',
-                   border: '1px solid var(--border)',
-                   color: isUserButtonHovered ? 'white' : 'var(--text-primary)',
-                   fontSize: '0.9rem',
-                   fontWeight: '500',
-                   cursor: 'pointer',
-                   transition: 'all 0.2s ease',
-                   whiteSpace: 'nowrap'
-                 }}
-               >
-                <User size={14} />
-                <span>{user.displayName || user.email?.split('@')[0] || 'User'}</span>
-                {isUserButtonHovered && <LogOut size={14} />}
-              </button>
-            ) : (
-              <button onClick={() => setIsAuthModalOpen(true)} className="user-toggle" aria-label="User account">
-                <User size={16} />
-              </button>
-            )}
-            <button onClick={toggleTheme} className="theme-toggle" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
-              <ThemeIcon />
-            </button>
-            <button onClick={() => setIsSettingsOpen(true)} className="settings-toggle" aria-label="Open settings">
-              <div className="settings-icon-img"></div>
-            </button>
+             <button onClick={() => window.open('https://privacy.dootinc.dpdns.org', '_blank')} className="info-toggle" aria-label="Privacy Policy" style={{ borderRadius: '32px' }}>
+               <Info size={16} />
+             </button>
+             {user ? (
+               isMobile ? (
+                 <button onClick={() => setIsLogoutModalOpen(true)} className="user-toggle" aria-label="User account" style={{ borderRadius: '32px' }}>
+                   <User size={16} />
+                 </button>
+               ) : (
+                 <button
+                   onClick={handleLogout}
+                   onMouseEnter={() => setIsUserButtonHovered(true)}
+                   onMouseLeave={() => setIsUserButtonHovered(false)}
+                   className="user-pill"
+                   aria-label="Logout"
+                   style={{
+                     display: 'flex',
+                     alignItems: 'center',
+                     gap: '8px',
+                     padding: isUserButtonHovered ? '8px 16px' : '8px 12px',
+                     borderRadius: '32px',
+                     backgroundColor: isUserButtonHovered ? 'var(--accent-red)' : 'var(--surface)',
+                     border: '1px solid var(--border)',
+                     color: isUserButtonHovered ? 'white' : 'var(--text-primary)',
+                     fontSize: '0.9rem',
+                     fontWeight: '500',
+                     cursor: 'pointer',
+                     transition: 'all 0.2s ease',
+                     whiteSpace: 'nowrap'
+                   }}
+                 >
+                  <User size={14} />
+                  <span>{user.displayName || user.email?.split('@')[0] || 'User'}</span>
+                  {isUserButtonHovered && <LogOut size={14} />}
+                </button>
+               )
+             ) : (
+               <button onClick={() => setIsAuthModalOpen(true)} className="user-toggle" aria-label="User account" style={{ borderRadius: '32px' }}>
+                 <User size={16} />
+               </button>
+             )}
+             <button onClick={toggleTheme} className="theme-toggle" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`} style={{ borderRadius: '32px' }}>
+               <ThemeIcon />
+             </button>
+             <button onClick={() => setIsSettingsOpen(true)} className="settings-toggle" aria-label="Open settings" style={{ borderRadius: '24px' }}>
+               <div className="settings-icon-img"></div>
+             </button>
           </div>
       </header>
       
@@ -288,12 +304,13 @@ setContent('');
         </div>
       </main>
 
-      <footer className="sticky-footer">
-        <p className="footer-text" style={{ margin: 0 }}>
-          {t.madeBy} <a href="http://lollo.dpdns.org" target="_blank" rel="noopener noreferrer">lollo21</a> · {t.generatedBy}
-          {generationTime && ` · ${Math.round(generationTime)}ms`}
-        </p>
-      </footer>
+       <footer className="sticky-footer">
+         <p className="footer-text" style={{ margin: 0 }}>
+           {t.madeBy} <a href="http://lollo.dpdns.org" target="_blank" rel="noopener noreferrer">lollo21</a>
+           {!isMobile && ` · ${t.generatedBy}`}
+           {generationTime && ` · ${Math.round(generationTime)}ms`}
+         </p>
+       </footer>
       
        <SettingsModal
          isOpen={isSettingsOpen}
@@ -305,12 +322,19 @@ setContent('');
          translations={t}
        />
 
-       <AuthModal
-         isOpen={isAuthModalOpen}
-         onClose={() => setIsAuthModalOpen(false)}
-       />
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+        />
 
-     </div>
+        <LogoutModal
+          isOpen={isLogoutModalOpen}
+          onClose={() => setIsLogoutModalOpen(false)}
+          onConfirm={handleLogout}
+          translations={t}
+        />
+
+      </div>
   );
 };
 
