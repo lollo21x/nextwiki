@@ -31,6 +31,9 @@ type Translation = {
   yes: string;
   no: string;
   logoutConfirm: string;
+  more: string;
+  share: string;
+  extending: string;
 };
 
 export const translations: Record<LanguageCode, Translation> = {
@@ -52,6 +55,9 @@ export const translations: Record<LanguageCode, Translation> = {
     yes: 'Yes',
     no: 'No',
     logoutConfirm: 'Are you sure you want to log out?',
+    more: 'Extend',
+    share: 'Share',
+    extending: 'Extending...',
   },
   it: {
     search: 'Cerca',
@@ -71,6 +77,9 @@ export const translations: Record<LanguageCode, Translation> = {
     yes: 'Sì',
     no: 'No',
     logoutConfirm: 'Sei sicuro di voler effettuare il logout?',
+    more: 'Estendi',
+    share: 'Condividi',
+    extending: 'Estendendo...',
   },
   fr: {
     search: 'Rechercher',
@@ -90,6 +99,9 @@ export const translations: Record<LanguageCode, Translation> = {
     yes: 'Oui',
     no: 'Non',
     logoutConfirm: 'Êtes-vous sûr de vouloir vous déconnecter ?',
+    more: 'Étendre',
+    share: 'Partager',
+    extending: 'Extension...',
   },
   es: {
     search: 'Buscar',
@@ -109,6 +121,9 @@ export const translations: Record<LanguageCode, Translation> = {
     yes: 'Sí',
     no: 'No',
     logoutConfirm: '¿Estás seguro de que quieres cerrar sesión?',
+    more: 'Extender',
+    share: 'Compartir',
+    extending: 'Extendiendo...',
   },
   de: {
     search: 'Suchen',
@@ -128,6 +143,9 @@ export const translations: Record<LanguageCode, Translation> = {
     yes: 'Ja',
     no: 'Nein',
     logoutConfirm: 'Sind Sie sicher, dass Sie sich abmelden möchten?',
+    more: 'Erweitern',
+    share: 'Teilen',
+    extending: 'Erweitern...',
   },
   ru: {
     search: 'Поиск',
@@ -147,6 +165,9 @@ export const translations: Record<LanguageCode, Translation> = {
     yes: 'Да',
     no: 'Нет',
     logoutConfirm: 'Вы уверены, что хотите выйти?',
+    more: 'Расширить',
+    share: 'Поделиться',
+    extending: 'Расширение...',
   },
   ar: {
     search: 'بحث',
@@ -166,6 +187,9 @@ export const translations: Record<LanguageCode, Translation> = {
     yes: 'نعم',
     no: 'لا',
     logoutConfirm: 'هل أنت متأكد أنك تريد تسجيل الخروج؟',
+    more: 'تمديد',
+    share: 'مشاركة',
+    extending: 'تمديد...',
   },
   zh: {
     search: '搜索',
@@ -185,6 +209,9 @@ export const translations: Record<LanguageCode, Translation> = {
     yes: '是',
     no: '否',
     logoutConfirm: '您确定要注销吗？',
+    more: '扩展',
+    share: '分享',
+    extending: '扩展中...',
   },
   pt: {
     search: 'Pesquisar',
@@ -204,6 +231,9 @@ export const translations: Record<LanguageCode, Translation> = {
     yes: 'Sim',
     no: 'Não',
     logoutConfirm: 'Tem certeza de que deseja sair?',
+    more: 'Expandir',
+    share: 'Compartilhar',
+    extending: 'Expandindo...',
   },
   hi: {
     search: 'खोजें',
@@ -223,5 +253,8 @@ export const translations: Record<LanguageCode, Translation> = {
     yes: 'हाँ',
     no: 'नहीं',
     logoutConfirm: 'क्या आप लॉग आउट करना चाहते हैं?',
+    more: 'विस्तारित करें',
+    share: 'साझा करें',
+    extending: 'विस्तारित...',
   },
 };

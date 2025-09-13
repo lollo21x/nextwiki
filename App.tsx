@@ -383,21 +383,21 @@ setContent('');
                 />
                 {!isLoading && !isExtending && (
                   <div className="action-buttons">
-                     <button
-                       onClick={handleExtendContent}
-                       className="more-button"
-                       disabled={isExtending}
-                     >
-                       <Plus size={16} />
-                       {isExtending ? 'Extending...' : 'More'}
-                     </button>
-                     <button
-                       onClick={() => setIsShareMenuOpen(true)}
-                       className="share-button"
-                     >
-                       <Share2 size={16} />
-                       Share
-                     </button>
+                      <button
+                        onClick={handleExtendContent}
+                        className="more-button"
+                        disabled={isExtending}
+                      >
+                        <Plus size={16} />
+                        {isExtending ? t.extending : t.more}
+                      </button>
+                      <button
+                        onClick={() => setIsShareMenuOpen(true)}
+                        className="share-button"
+                      >
+                        <Share2 size={16} />
+                        {t.share}
+                      </button>
                   </div>
                 )}
               </>
