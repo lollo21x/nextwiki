@@ -8,6 +8,7 @@ interface ContentDisplayProps {
   content: string;
   isLoading: boolean;
   onWordClick: (word: string) => void;
+  isExtending?: boolean;
 }
 
 const InteractiveContent: React.FC<{
@@ -42,16 +43,16 @@ const InteractiveContent: React.FC<{
   );
 };
 
-const StreamingContent: React.FC<{ content: string }> = ({ content }) => (
+const StreamingContent: React.FC<{ content: string; isExtending?: boolean }> = ({ content, isExtending }) => (
   <p style={{ margin: 0 }}>
     {content}
-    <span className="blinking-cursor">█</span>
+    {!isExtending && <span className="blinking-cursor">█</span>}
   </p>
 );
 
-const ContentDisplay: React.FC<ContentDisplayProps> = ({ content, isLoading, onWordClick }) => {
+const ContentDisplay: React.FC<ContentDisplayProps> = ({ content, isLoading, onWordClick, isExtending }) => {
   if (isLoading) {
-    return <StreamingContent content={content} />;
+    return <StreamingContent content={content} isExtending={isExtending} />;
   }
   
   if (content) {

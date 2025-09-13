@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { streamDefinition, generateImage, GenerationMode } from './services/geminiService';
+import { OPENROUTER_API_URL, OPENROUTER_API_KEY } from './services/geminiService';
 import ContentDisplay from './components/ContentDisplay';
 import SearchBar from './components/SearchBar';
 import LoadingSkeleton from './components/LoadingSkeleton';
@@ -13,9 +14,10 @@ import HistoryDisplay from './components/HistoryDisplay';
 import SettingsModal from './components/SettingsModal';
 import LogoutModal from './components/LogoutModal';
 import { AuthModal } from './components/AuthModal';
+import ShareMenu from './components/ShareMenu';
 import { useAuth } from './src/hooks/useAuth';
-import { translations, LanguageCode } from './utils/translations';
-import { User, LogOut, Info } from 'lucide-react';
+import { translations, LanguageCode, languageNameMap } from './utils/translations';
+import { User, LogOut, Info, Plus, Share2 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from './src/services/firebase';
 
@@ -45,13 +47,18 @@ const App: React.FC = () => {
    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
    // --- End Settings State ---
 
-    // --- Auth State ---
-    const { user, isLoading: authLoading } = useAuth();
-    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
-    const [isUserButtonHovered, setIsUserButtonHovered] = useState(false);
-    const [isMobile, setIsMobile] = useState(false);
-    // --- End Auth State ---
+     // --- Auth State ---
+     const { user, isLoading: authLoading } = useAuth();
+     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+     const [isUserButtonHovered, setIsUserButtonHovered] = useState(false);
+     const [isMobile, setIsMobile] = useState(false);
+     // --- End Auth State ---
+
+     // --- Share and Extend State ---
+     const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
+     const [isExtending, setIsExtending] = useState(false);
+     // --- End Share and Extend State ---
 
   const t = translations[language];
 
@@ -187,6 +194,84 @@ setContent('');
 
   const handleHomeClick = () => handleTopicChange('wiki');
 
+  const handleExtendContent = useCallback(async () => {
+    if (isExtending || !content) return;
+
+    setIsExtending(true);
+    const startTime = performance.now();
+
+      let extendedContent = content;
+      let isFirstChunk = true;
+      try {
+        const extendPrompt = `Continue the explanation of "${currentTopic}" from where it left off. Provide additional detailed information, examples, or related aspects. Keep the same style and format. Do not respond as a chatbot - continue seamlessly as if this were part of the original article. Do not use any formatting like asterisks for bold text or other markdown elements.`;
+        const prompt = `${extendPrompt} The response must be in ${languageNameMap[language] || 'English'}. Be informative. Do not use markdown, titles, or any special formatting. Respond with only the text of the response itself.`;
+
+        const response = await fetch(OPENROUTER_API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: 'mistralai/mistral-small-3.2-24b-instruct:free',
+            messages: [{ role: 'user', content: prompt }],
+            stream: true,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('Could not get response body reader.');
+        }
+
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const jsonStr = line.substring(6);
+              if (jsonStr === '[DONE]') {
+                return;
+              }
+              try {
+                const parsed = JSON.parse(jsonStr);
+                const chunk = parsed.choices[0]?.delta?.content;
+                if (chunk) {
+                  if (isFirstChunk) {
+                    extendedContent += ' ' + chunk;
+                    isFirstChunk = false;
+                  } else {
+                    extendedContent += chunk;
+                  }
+                  setContent(extendedContent);
+                }
+              } catch (e) {
+                console.error('Failed to parse stream chunk:', jsonStr, e);
+              }
+            }
+          }
+        }
+      } catch (e) {
+      console.error('Error extending content:', e);
+    } finally {
+      const endTime = performance.now();
+      setGenerationTime(prev => prev ? prev + (endTime - startTime) : (endTime - startTime));
+      setIsExtending(false);
+    }
+  }, [content, currentTopic, language, isExtending]);
+
    const handleSaveSettings = (settings: { accentColor: string; language: LanguageCode; generationMode: GenerationMode }) => {
      setAccentColor(settings.accentColor);
      setLanguage(settings.language);
@@ -288,13 +373,35 @@ setContent('');
           
           {isLoading && content.length === 0 && !error && <LoadingSkeleton />}
 
-          {content.length > 0 && !error && (
-             <ContentDisplay 
-               content={content} 
-               isLoading={isLoading} 
-               onWordClick={handleTopicChange} 
-             />
-          )}
+           {content.length > 0 && !error && (
+              <>
+                <ContentDisplay
+                  content={content}
+                  isLoading={isLoading || isExtending}
+                  onWordClick={handleTopicChange}
+                  isExtending={isExtending}
+                />
+                {!isLoading && !isExtending && (
+                  <div className="action-buttons">
+                     <button
+                       onClick={handleExtendContent}
+                       className="more-button"
+                       disabled={isExtending}
+                     >
+                       <Plus size={16} />
+                       {isExtending ? 'Extending...' : 'More'}
+                     </button>
+                     <button
+                       onClick={() => setIsShareMenuOpen(true)}
+                       className="share-button"
+                     >
+                       <Share2 size={16} />
+                       Share
+                     </button>
+                  </div>
+                )}
+              </>
+           )}
 
           {!isLoading && !error && content.length === 0 && (
             <div style={{ color: 'var(--text-secondary)', padding: '2rem 0' }}>
@@ -327,14 +434,22 @@ setContent('');
           onClose={() => setIsAuthModalOpen(false)}
         />
 
-        <LogoutModal
-          isOpen={isLogoutModalOpen}
-          onClose={() => setIsLogoutModalOpen(false)}
-          onConfirm={handleLogout}
-          translations={t}
-        />
+         <LogoutModal
+           isOpen={isLogoutModalOpen}
+           onClose={() => setIsLogoutModalOpen(false)}
+           onConfirm={handleLogout}
+           translations={t}
+         />
 
-      </div>
+         <ShareMenu
+           isOpen={isShareMenuOpen}
+           onClose={() => setIsShareMenuOpen(false)}
+           url={window.location.href}
+           title={`${currentTopic} - nextwiki`}
+           theme={theme}
+         />
+
+       </div>
   );
 };
 

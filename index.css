@@ -1,0 +1,118 @@
+/* Share Menu Styles within Modal */
+.share-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.share-menu-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.close-button:hover {
+  background: var(--surface);
+}
+
+.share-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.share-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.share-option:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.share-option:hover svg {
+  fill: var(--bg);
+}
+
+.share-option:hover img {
+  /* Invert colors on hover for Reddit icon */
+  filter: invert(1);
+}
+
+.share-option svg {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.copy-link {
+  grid-column: span 2;
+  justify-content: center;
+}
+
+.native-share {
+  grid-column: span 2;
+  justify-content: center;
+}
+
+/* More Button Styles */
+.more-button, .share-button {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 32px;
+  background: var(--surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  margin: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.more-button:hover, .share-button:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+.more-button:hover svg, .share-button:hover svg {
+  color: var(--bg);
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}

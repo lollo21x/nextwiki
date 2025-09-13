@@ -5,8 +5,8 @@
 import { LanguageCode, languageNameMap } from '../utils/translations';
 
 // --- OpenRouter Configuration ---
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const OPENROUTER_API_KEY = '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';
+export const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+export const OPENROUTER_API_KEY = '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';
 // --- End OpenRouter Configuration ---
 
 // --- Pexels Configuration for Images ---
