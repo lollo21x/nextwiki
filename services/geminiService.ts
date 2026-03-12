@@ -6,7 +6,7 @@ import { LanguageCode, languageNameMap } from '../utils/translations';
 
 // --- OpenRouter Configuration ---
 export const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-export const OPENROUTER_API_KEY = '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';
+export const OPENROUTER_API_KEY = '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';
 // --- End OpenRouter Configuration ---
 
 // --- Pexels Configuration for Images ---
@@ -59,7 +59,7 @@ export async function* streamDefinition(
         'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'mistralai/mistral-small-3.2-24b-instruct:free',
+        model: 'openrouter/free',
         messages: [{ role: 'user', content: prompt }],
         stream: true,
       }),
