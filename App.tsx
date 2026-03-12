@@ -313,7 +313,7 @@ const App: React.FC = () => {
             <Info size={16} />
           </button>
           {showHubBack && (
-            <button onClick={() => window.location.href = 'https://hub4d.lollo.dpdns.org/'} className="info-toggle" aria-label="Back to Hub" style={{ borderRadius: '32px', backgroundColor: 'var(--accent)', color: 'var(--bg)' }}>
+            <button onClick={() => window.location.href = 'https://hub4d.lollo.dpdns.org/'} className="info-toggle" aria-label="Back to Hub" style={{ borderRadius: '32px' }}>
               <ArrowLeft size={16} />
             </button>
           )}
