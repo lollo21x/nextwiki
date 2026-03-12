@@ -17,7 +17,7 @@ import { AuthModal } from './components/AuthModal';
 import ShareMenu from './components/ShareMenu';
 import { useAuth } from './src/hooks/useAuth';
 import { translations, LanguageCode, languageNameMap } from './utils/translations';
-import { User, LogOut, Info, Plus, Share2 } from 'lucide-react';
+import { User, LogOut, Info, Plus, Share2, ArrowLeft } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from './src/services/firebase';
 
@@ -38,27 +38,28 @@ const App: React.FC = () => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [generationTime, setGenerationTime] = useState<number | null>(null);
   const [history, setHistory] = useState<string[]>([]);
-  
-   // --- Settings State ---
-   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
-   const [accentColor, setAccentColor] = useState(() => localStorage.getItem('accentColor') || 'default');
-   const [language, setLanguage] = useState<LanguageCode>(() => (localStorage.getItem('language') || 'en') as LanguageCode);
-   const [generationMode, setGenerationMode] = useState<GenerationMode>(() => (localStorage.getItem('generationMode') || 'encyclopedia') as GenerationMode);
-   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-   // --- End Settings State ---
 
-     // --- Auth State ---
-     const { user, isLoading: authLoading } = useAuth();
-     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
-     const [isUserButtonHovered, setIsUserButtonHovered] = useState(false);
-     const [isMobile, setIsMobile] = useState(false);
-     // --- End Auth State ---
+  // --- Settings State ---
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  const [accentColor, setAccentColor] = useState(() => localStorage.getItem('accentColor') || 'default');
+  const [language, setLanguage] = useState<LanguageCode>(() => (localStorage.getItem('language') || 'en') as LanguageCode);
+  const [generationMode, setGenerationMode] = useState<GenerationMode>(() => (localStorage.getItem('generationMode') || 'encyclopedia') as GenerationMode);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  // --- End Settings State ---
 
-     // --- Share and Extend State ---
-     const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
-     const [isExtending, setIsExtending] = useState(false);
-     // --- End Share and Extend State ---
+  // --- Auth State ---
+  const { user, isLoading: authLoading } = useAuth();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isUserButtonHovered, setIsUserButtonHovered] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  // --- End Auth State ---
+
+  // --- Share and Extend State ---
+  const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
+  const [isExtending, setIsExtending] = useState(false);
+  const [showHubBack, setShowHubBack] = useState(false);
+  // --- End Share and Extend State ---
 
   const t = translations[language];
 
@@ -79,6 +80,12 @@ const App: React.FC = () => {
   }, [history]);
 
   useEffect(() => {
+    if (document.referrer.includes('hub4d.lollo.dpdns.org')) {
+      setShowHubBack(true);
+    }
+  }, []);
+
+  useEffect(() => {
     document.documentElement.classList.toggle('light-theme', theme === 'light');
     document.documentElement.classList.toggle('dark-theme', theme === 'dark');
     localStorage.setItem('theme', theme);
@@ -88,11 +95,11 @@ const App: React.FC = () => {
     document.documentElement.setAttribute('data-accent-color', accentColor);
     localStorage.setItem('accentColor', accentColor);
   }, [accentColor]);
-  
+
   useEffect(() => {
     localStorage.setItem('language', language);
   }, [language]);
-  
+
   useEffect(() => {
     localStorage.setItem('generationMode', generationMode);
   }, [generationMode]);
@@ -129,7 +136,7 @@ const App: React.FC = () => {
       window.history.pushState({ topic: newTopic }, '', url);
 
       setCurrentTopic(newTopic);
-      
+
       setHistory(prevHistory => {
         const normalizedNewTopic = newTopic.toLowerCase();
         const filteredHistory = prevHistory.filter(item => item.toLowerCase() !== normalizedNewTopic);
@@ -175,7 +182,7 @@ const App: React.FC = () => {
         if (!isCancelled) {
           const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred';
           setError(errorMessage);
-setContent('');
+          setContent('');
           console.error(e);
         }
       } finally {
@@ -188,7 +195,7 @@ setContent('');
     };
 
     fetchContentAndImage();
-    
+
     return () => { isCancelled = true; };
   }, [currentTopic, language, generationMode]);
 
@@ -200,70 +207,70 @@ setContent('');
     setIsExtending(true);
     const startTime = performance.now();
 
-      let extendedContent = content;
-      let isFirstChunk = true;
-      try {
-        const extendPrompt = `Continue the explanation of "${currentTopic}" from where it left off. Provide additional detailed information, examples, or related aspects. Keep the same style and format. Do not respond as a chatbot - continue seamlessly as if this were part of the original article. Do not use any formatting like asterisks for bold text or other markdown elements.`;
-        const prompt = `${extendPrompt} The response must be in ${languageNameMap[language] || 'English'}. Be informative. Do not use markdown, titles, or any special formatting. Respond with only the text of the response itself.`;
+    let extendedContent = content;
+    let isFirstChunk = true;
+    try {
+      const extendPrompt = `Continue the explanation of "${currentTopic}" from where it left off. Provide additional detailed information, examples, or related aspects. Keep the same style and format. Do not respond as a chatbot - continue seamlessly as if this were part of the original article. Do not use any formatting like asterisks for bold text or other markdown elements.`;
+      const prompt = `${extendPrompt} The response must be in ${languageNameMap[language] || 'English'}. Be informative. Do not use markdown, titles, or any special formatting. Respond with only the text of the response itself.`;
 
-        const response = await fetch(OPENROUTER_API_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: 'mistralai/mistral-small-3.2-24b-instruct:free',
-            messages: [{ role: 'user', content: prompt }],
-            stream: true,
-          }),
-        });
+      const response = await fetch(OPENROUTER_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'openrouter/free',
+          messages: [{ role: 'user', content: prompt }],
+          stream: true,
+        }),
+      });
 
-        if (!response.ok) {
-          throw new Error(`API request failed with status ${response.status}`);
-        }
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
 
-        const reader = response.body?.getReader();
-        if (!reader) {
-          throw new Error('Could not get response body reader.');
-        }
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('Could not get response body reader.');
+      }
 
-        const decoder = new TextDecoder();
-        let buffer = '';
+      const decoder = new TextDecoder();
+      let buffer = '';
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
 
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const jsonStr = line.substring(6);
-              if (jsonStr === '[DONE]') {
-                return;
-              }
-              try {
-                const parsed = JSON.parse(jsonStr);
-                const chunk = parsed.choices[0]?.delta?.content;
-                if (chunk) {
-                  if (isFirstChunk) {
-                    extendedContent += ' ' + chunk;
-                    isFirstChunk = false;
-                  } else {
-                    extendedContent += chunk;
-                  }
-                  setContent(extendedContent);
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const jsonStr = line.substring(6);
+            if (jsonStr === '[DONE]') {
+              return;
+            }
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const chunk = parsed.choices[0]?.delta?.content;
+              if (chunk) {
+                if (isFirstChunk) {
+                  extendedContent += ' ' + chunk;
+                  isFirstChunk = false;
+                } else {
+                  extendedContent += chunk;
                 }
-              } catch (e) {
-                console.error('Failed to parse stream chunk:', jsonStr, e);
+                setContent(extendedContent);
               }
+            } catch (e) {
+              console.error('Failed to parse stream chunk:', jsonStr, e);
             }
           }
         }
-      } catch (e) {
+      }
+    } catch (e) {
       console.error('Error extending content:', e);
     } finally {
       const endTime = performance.now();
@@ -272,20 +279,20 @@ setContent('');
     }
   }, [content, currentTopic, language, isExtending]);
 
-   const handleSaveSettings = (settings: { accentColor: string; language: LanguageCode; generationMode: GenerationMode }) => {
-     setAccentColor(settings.accentColor);
-     setLanguage(settings.language);
-     setGenerationMode(settings.generationMode);
-     setIsSettingsOpen(false);
-   };
+  const handleSaveSettings = (settings: { accentColor: string; language: LanguageCode; generationMode: GenerationMode }) => {
+    setAccentColor(settings.accentColor);
+    setLanguage(settings.language);
+    setGenerationMode(settings.generationMode);
+    setIsSettingsOpen(false);
+  };
 
-   const handleLogout = async () => {
-     try {
-       await signOut(auth);
-     } catch (error) {
-       console.error('Error signing out:', error);
-     }
-   };
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   const ThemeIcon = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -301,59 +308,64 @@ setContent('');
           <div className="logo-image"></div>
           <h1>nextwiki</h1>
         </div>
-          <div className="header-controls">
-             <button onClick={() => window.open('https://privacy.dootinc.dpdns.org', '_blank')} className="info-toggle" aria-label="Privacy Policy" style={{ borderRadius: '32px' }}>
-               <Info size={16} />
-             </button>
-             {user ? (
-               isMobile ? (
-                 <button onClick={() => setIsLogoutModalOpen(true)} className="user-toggle" aria-label="User account" style={{ borderRadius: '32px' }}>
-                   <User size={16} />
-                 </button>
-               ) : (
-                 <button
-                   onClick={handleLogout}
-                   onMouseEnter={() => setIsUserButtonHovered(true)}
-                   onMouseLeave={() => setIsUserButtonHovered(false)}
-                   className="user-pill"
-                   aria-label="Logout"
-                   style={{
-                     display: 'flex',
-                     alignItems: 'center',
-                     gap: '8px',
-                     padding: isUserButtonHovered ? '8px 16px' : '8px 12px',
-                     borderRadius: '32px',
-                     backgroundColor: isUserButtonHovered ? 'var(--accent-red)' : 'var(--surface)',
-                     border: '1px solid var(--border)',
-                     color: isUserButtonHovered ? 'white' : 'var(--text-primary)',
-                     fontSize: '0.9rem',
-                     fontWeight: '500',
-                     cursor: 'pointer',
-                     transition: 'all 0.2s ease',
-                     whiteSpace: 'nowrap'
-                   }}
-                 >
-                  <User size={14} />
-                  <span>{user.displayName || user.email?.split('@')[0] || 'User'}</span>
-                  {isUserButtonHovered && <LogOut size={14} />}
-                </button>
-               )
-             ) : (
-               <button onClick={() => setIsAuthModalOpen(true)} className="user-toggle" aria-label="User account" style={{ borderRadius: '32px' }}>
-                 <User size={16} />
-               </button>
-             )}
-             <button onClick={toggleTheme} className="theme-toggle" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`} style={{ borderRadius: '32px' }}>
-               <ThemeIcon />
-             </button>
-             <button onClick={() => setIsSettingsOpen(true)} className="settings-toggle" aria-label="Open settings" style={{ borderRadius: '24px' }}>
-               <div className="settings-icon-img"></div>
-             </button>
-          </div>
+        <div className="header-controls">
+          <button onClick={() => window.open('https://privacy.dootinc.dpdns.org', '_blank')} className="info-toggle" aria-label="Privacy Policy" style={{ borderRadius: '32px' }}>
+            <Info size={16} />
+          </button>
+          {showHubBack && (
+            <button onClick={() => window.location.href = 'https://hub4d.lollo.dpdns.org/'} className="info-toggle" aria-label="Back to Hub" style={{ borderRadius: '32px', backgroundColor: 'var(--accent)', color: 'var(--bg)' }}>
+              <ArrowLeft size={16} />
+            </button>
+          )}
+          {user ? (
+            isMobile ? (
+              <button onClick={() => setIsLogoutModalOpen(true)} className="user-toggle" aria-label="User account" style={{ borderRadius: '32px' }}>
+                <User size={16} />
+              </button>
+            ) : (
+              <button
+                onClick={handleLogout}
+                onMouseEnter={() => setIsUserButtonHovered(true)}
+                onMouseLeave={() => setIsUserButtonHovered(false)}
+                className="user-pill"
+                aria-label="Logout"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: isUserButtonHovered ? '8px 16px' : '8px 12px',
+                  borderRadius: '32px',
+                  backgroundColor: isUserButtonHovered ? 'var(--accent-red)' : 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  color: isUserButtonHovered ? 'white' : 'var(--text-primary)',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <User size={14} />
+                <span>{user.displayName || user.email?.split('@')[0] || 'User'}</span>
+                {isUserButtonHovered && <LogOut size={14} />}
+              </button>
+            )
+          ) : (
+            <button onClick={() => setIsAuthModalOpen(true)} className="user-toggle" aria-label="User account" style={{ borderRadius: '32px' }}>
+              <User size={16} />
+            </button>
+          )}
+          <button onClick={toggleTheme} className="theme-toggle" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`} style={{ borderRadius: '32px' }}>
+            <ThemeIcon />
+          </button>
+          <button onClick={() => setIsSettingsOpen(true)} className="settings-toggle" aria-label="Open settings" style={{ borderRadius: '24px' }}>
+            <div className="settings-icon-img"></div>
+          </button>
+        </div>
       </header>
-      
+
       <SearchBar onSearch={handleTopicChange} isLoading={isLoading} placeholder={t.search} />
-      
+
       <main>
         <HistoryDisplay history={history} onHistoryClick={handleTopicChange} title={t.recent} />
 
@@ -370,38 +382,38 @@ setContent('');
               <p style={{ marginTop: '0.5rem', margin: 0 }}>{error}</p>
             </div>
           )}
-          
+
           {isLoading && content.length === 0 && !error && <LoadingSkeleton />}
 
-           {content.length > 0 && !error && (
-              <>
-                <ContentDisplay
-                  content={content}
-                  isLoading={isLoading || isExtending}
-                  onWordClick={handleTopicChange}
-                  isExtending={isExtending}
-                />
-                {!isLoading && !isExtending && (
-                  <div className="action-buttons">
-                      <button
-                        onClick={handleExtendContent}
-                        className="more-button"
-                        disabled={isExtending}
-                      >
-                        <Plus size={16} />
-                        {isExtending ? t.extending : t.more}
-                      </button>
-                      <button
-                        onClick={() => setIsShareMenuOpen(true)}
-                        className="share-button"
-                      >
-                        <Share2 size={16} />
-                        {t.share}
-                      </button>
-                  </div>
-                )}
-              </>
-           )}
+          {content.length > 0 && !error && (
+            <>
+              <ContentDisplay
+                content={content}
+                isLoading={isLoading || isExtending}
+                onWordClick={handleTopicChange}
+                isExtending={isExtending}
+              />
+              {!isLoading && !isExtending && (
+                <div className="action-buttons">
+                  <button
+                    onClick={handleExtendContent}
+                    className="more-button"
+                    disabled={isExtending}
+                  >
+                    <Plus size={16} />
+                    {isExtending ? t.extending : t.more}
+                  </button>
+                  <button
+                    onClick={() => setIsShareMenuOpen(true)}
+                    className="share-button"
+                  >
+                    <Share2 size={16} />
+                    {t.share}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
 
           {!isLoading && !error && content.length === 0 && (
             <div style={{ color: 'var(--text-secondary)', padding: '2rem 0' }}>
@@ -411,45 +423,45 @@ setContent('');
         </div>
       </main>
 
-       <footer className="sticky-footer">
-         <p className="footer-text" style={{ margin: 0 }}>
-           {t.madeBy} <a href="http://lollo.dpdns.org" target="_blank" rel="noopener noreferrer">lollo21</a>
-           {!isMobile && ` · ${t.generatedBy}`}
-           {generationTime && ` · ${Math.round(generationTime)}ms`}
-         </p>
-       </footer>
-      
-       <SettingsModal
-         isOpen={isSettingsOpen}
-         onClose={() => setIsSettingsOpen(false)}
-         accentColor={accentColor}
-         language={language}
-         generationMode={generationMode}
-         onSave={handleSaveSettings}
-         translations={t}
-       />
+      <footer className="sticky-footer">
+        <p className="footer-text" style={{ margin: 0 }}>
+          {t.madeBy} <a href="http://lollo.dpdns.org" target="_blank" rel="noopener noreferrer">lollo21</a>
+          {!isMobile && ` · ${t.generatedBy}`}
+          {generationTime && ` · ${Math.round(generationTime)}ms`}
+        </p>
+      </footer>
 
-        <AuthModal
-          isOpen={isAuthModalOpen}
-          onClose={() => setIsAuthModalOpen(false)}
-        />
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        accentColor={accentColor}
+        language={language}
+        generationMode={generationMode}
+        onSave={handleSaveSettings}
+        translations={t}
+      />
 
-         <LogoutModal
-           isOpen={isLogoutModalOpen}
-           onClose={() => setIsLogoutModalOpen(false)}
-           onConfirm={handleLogout}
-           translations={t}
-         />
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
 
-         <ShareMenu
-           isOpen={isShareMenuOpen}
-           onClose={() => setIsShareMenuOpen(false)}
-           url={window.location.href}
-           title={`${currentTopic} - nextwiki`}
-           theme={theme}
-         />
+      <LogoutModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={handleLogout}
+        translations={t}
+      />
 
-       </div>
+      <ShareMenu
+        isOpen={isShareMenuOpen}
+        onClose={() => setIsShareMenuOpen(false)}
+        url={window.location.href}
+        title={`${currentTopic} - nextwiki`}
+        theme={theme}
+      />
+
+    </div>
   );
 };
 
