@@ -17,36 +17,31 @@ interface SettingsModalProps {
 }
 
 const ACCENT_COLORS = ['default', 'blue', 'green', 'yellow', 'pink', 'orange', 'red', 'purple'];
-const MODES: GenerationMode[] = ['encyclopedia', 'eli5', 'practicalExamples', 'stepByStep', 'summary', 'funFacts'];
 
 const CheckmarkIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M5 13L9 17L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M5 13L9 17L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const ArrowDownIcon = () => (
   <svg className="custom-select-arrow" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M19 9L12 16L5 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M19 9L12 16L5 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ 
+const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen, onClose, accentColor, language, generationMode, onSave, translations
 }) => {
   const [selectedColor, setSelectedColor] = useState(accentColor);
   const [selectedLang, setSelectedLang] = useState<LanguageCode>(language);
-  const [selectedMode, setSelectedMode] = useState<GenerationMode>(generationMode);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
-  const [isModeDropdownOpen, setIsModeDropdownOpen] = useState(false);
   const langDropdownRef = useRef<HTMLDivElement>(null);
-  const modeDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setSelectedColor(accentColor);
       setSelectedLang(language);
-      setSelectedMode(generationMode);
     }
   }, [isOpen, accentColor, language, generationMode]);
 
@@ -64,19 +59,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     };
   }, [isOpen, isLangDropdownOpen]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (modeDropdownRef.current && !modeDropdownRef.current.contains(event.target as Node)) {
-        setIsModeDropdownOpen(false);
-      }
-    };
-    if (isOpen && isModeDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen, isModeDropdownOpen]);
+
 
   if (!isOpen) return null;
 
@@ -91,13 +74,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     setIsLangDropdownOpen(false);
   };
 
-  const handleModeSelect = (mode: GenerationMode) => {
-    setSelectedMode(mode);
-    setIsModeDropdownOpen(false);
-  };
+
 
   const handleSave = () => {
-    onSave({ accentColor: selectedColor, language: selectedLang, generationMode: selectedMode });
+    onSave({ accentColor: selectedColor, language: selectedLang, generationMode });
   };
 
   return (
@@ -117,30 +97,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 {selectedColor === color && <CheckmarkIcon />}
               </button>
             ))}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="modal-section-title">{translations.generationMode}</h3>
-          <div className={`custom-select-container ${isModeDropdownOpen ? 'open' : ''}`} ref={modeDropdownRef}>
-            <div className="custom-select-trigger" onClick={() => setIsModeDropdownOpen(!isModeDropdownOpen)} style={{ borderRadius: '32px' }}>
-              <span>{translations.modes[selectedMode]}</span>
-              <ArrowDownIcon />
-            </div>
-            {isModeDropdownOpen && (
-              <ul className="custom-select-options">
-                {MODES.map(mode => (
-                  <li
-                    key={mode}
-                    className={`custom-select-option ${selectedMode === mode ? 'selected' : ''}`}
-                    onClick={() => handleModeSelect(mode)}
-                    style={{ borderRadius: '16px' }}
-                  >
-                    {translations.modes[mode]}
-                  </li>
-                ))}
-              </ul>
-            )}
           </div>
         </div>
 
@@ -167,7 +123,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             )}
           </div>
         </div>
-        
+
         <div className="modal-actions">
           <button className="save-button" onClick={handleSave} style={{ borderRadius: '32px' }}>
             {translations.save}
