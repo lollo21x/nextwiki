@@ -376,6 +376,17 @@
             transform: none;
             pointer-events: auto;
         }
+
+        /* Homepage header: position icons top-right like sticky header */
+        .homepage .app-header,
+        body:has(.homepage) > .app-header {
+          justify-content: flex-end;
+        }
+
+        /* Article view sticky header: hide logo text on mobile for compact layout */
+        .app-header.sticky-scrolled .logo-container h1 {
+          display: none;
+        }
       }
 
       /* Settings Modal */
