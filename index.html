@@ -81,6 +81,15 @@
       @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
       @keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
       @keyframes blink { from, to { opacity: 1 } 50% { opacity: 0; } }
+      @keyframes float { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-20px) rotate(3deg); } }
+      @keyframes floatReverse { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(15px) rotate(-2deg); } }
+      @keyframes drift { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 25% { transform: translate(10px, -15px) rotate(5deg); } 50% { transform: translate(-5px, -25px) rotate(-3deg); } 75% { transform: translate(-15px, -10px) rotate(2deg); } }
+      @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+      @keyframes glowPulse { 0%, 100% { box-shadow: 0 0 20px rgba(255,255,255,0.05); } 50% { box-shadow: 0 0 35px rgba(255,255,255,0.1); } }
+      html.light-theme .homepage-search-container .search-container { animation: none; border-color: rgba(0,0,0,0.15); }
+      html.light-theme .homepage-search-container .search-container:focus-within { border-color: var(--accent); }
+      @keyframes spinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
       body {
         background-color: var(--bg);
@@ -102,9 +111,75 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 3rem;
+        margin-bottom: 2rem;
         animation: fadeIn 0.5s ease-out;
+        transition: all 0.3s ease;
       }
+      
+      /* --- Sticky Header Feature --- */
+      .app-header.sticky-scrolled {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        margin-bottom: 0;
+        padding: 0.75rem 2rem;
+        background-color: rgba(var(--bg-rgb, 13, 13, 13), 0.85); /* fallback */
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        z-index: 1000;
+        border-bottom: 1px solid var(--border);
+      }
+      
+      html.light-theme .app-header.sticky-scrolled {
+        background-color: rgba(245, 245, 247, 0.85);
+      }
+
+      .header-search-compact {
+        flex: 1;
+        max-width: 500px;
+        margin: 0 1.5rem;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+        pointer-events: none;
+      }
+      
+      .app-header.sticky-scrolled .header-search-compact {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+      
+      .app-header.sticky-scrolled .header-search-compact .search-container {
+        margin-bottom: 0;
+        padding: 0.4rem 0.75rem;
+        border-radius: 999px;
+      }
+
+      .main-search-wrapper {
+        transition: opacity 0.3s ease, transform 0.3s ease, pointer-events 0s 0s;
+        transform-origin: top;
+      }
+      .main-search-wrapper.hidden {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+        pointer-events: none;
+        transition: opacity 0.3s ease, transform 0.3s ease, pointer-events 0s 0.3s;
+      }
+      
+      /* Collapse user pill slightly when scrolled */
+      .app-header.sticky-scrolled .user-name-text {
+        display: none;
+      }
+      
+      /* Add padding to body when header is sticky to prevent content jump */
+      body:has(.app-header.sticky-scrolled) {
+        padding-top: 6rem; /* 2rem normal padding + header height approx */
+      }
+
       .logo-container { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: var(--text-primary); cursor: pointer; }
       .logo-container h1 { font-size: 1.5rem; font-weight: 500; letter-spacing: -0.02em; }
       .logo-image { width: 24px; height: 24px; background-image: var(--logo-url); background-size: contain; background-repeat: no-repeat; transition: background-image 0.3s ease; }
@@ -161,7 +236,7 @@
 
       .search-container {
         display: flex; align-items: center; gap: 1rem; padding: 0.5rem 0.75rem; background-color: var(--surface); border: 1px solid var(--border);
-        border-radius: 12px; position: sticky; top: 1rem; z-index: 10; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); margin-bottom: 2rem;
+        border-radius: 999px; position: sticky; top: 1rem; z-index: 10; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); margin-bottom: 2rem;
       }
       .search-form { flex-grow: 1; display: flex; align-items: center; gap: 0.5rem; }
       .search-icon { width: 20px; height: 20px; color: var(--text-secondary); }
@@ -171,9 +246,13 @@
 
       .history-container { margin-bottom: 2rem; animation: fadeIn 0.5s ease-out; }
       .history-title { font-size: 0.9em; color: var(--text-secondary); margin-bottom: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
-      .history-items { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-      .history-item { font-size: 0.9em; padding: 0.25rem 0.75rem; background-color: var(--surface); border: 1px solid var(--border); border-radius: 999px; transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease; }
+      .history-items { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: flex-start; }
+      .history-item { font-size: 0.9em; padding: 0.25rem 0.25rem 0.25rem 0.75rem; background-color: var(--surface); border: 1px solid var(--border); border-radius: 999px; transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease; display: inline-flex; align-items: center; gap: 0.25rem; }
+      .history-item-text { cursor: pointer; padding-right: 0.25rem; }
       .history-item:hover { background-color: var(--accent); border-color: var(--accent); color: var(--bg); }
+      .history-item-delete { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; opacity: 0.6; transition: all 0.2s ease; cursor: pointer; }
+      .history-item-delete:hover { opacity: 1; background-color: rgba(0,0,0,0.1); }
+      html.dark-theme .history-item-delete:hover { background-color: rgba(255,255,255,0.2); }
       
       .image-container {
         width: 100%; aspect-ratio: 16 / 9; background-color: var(--surface); border-radius: 12px; margin-bottom: 2rem; overflow: hidden;
@@ -211,6 +290,94 @@
       .footer-text a { color: inherit; text-decoration: none; transition: color 0.2s ease-in-out; }
       .footer-text a:hover { color: var(--accent); text-decoration: underline; }
 
+      /* ====== HOMEPAGE STYLES ====== */
+      body:has(> #root > div > .homepage) {
+        overflow-y: hidden;
+      }
+      .homepage {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        min-height: 80vh; position: relative;
+      }
+      .homepage-brand {
+        display: flex; align-items: center; gap: 1.25rem;
+        margin-bottom: 2.5rem;
+        animation: fadeInUp 0.8s ease-out;
+      }
+      .homepage-logo {
+        width: 72px; height: 72px;
+        background-image: var(--logo-url); background-size: contain; background-repeat: no-repeat;
+        transition: background-image 0.3s ease;
+        flex-shrink: 0;
+      }
+      .homepage-title {
+        font-size: 3.2rem; font-weight: 600; letter-spacing: -0.03em;
+        color: var(--text-primary);
+        margin: 0;
+      }
+      .homepage-search-container {
+        width: 100%; max-width: 560px;
+        animation: scaleIn 0.6s ease-out 0.2s both;
+      }
+      .homepage-search-container .search-container {
+        padding: 0.75rem 1.25rem;
+        border-radius: 999px;
+        animation: glowPulse 3s ease-in-out infinite;
+      }
+      .homepage-search-container .search-input {
+        font-size: 1.25rem; padding: 0.65rem;
+      }
+      .homepage-search-container .search-icon {
+        width: 24px; height: 24px;
+      }
+      .homepage-history {
+        margin-top: 2rem; width: 100%; max-width: 560px;
+        animation: fadeInUp 0.8s ease-out 0.4s both;
+      }
+      .homepage-history .history-container { margin-bottom: 0; text-align: left; }
+      .homepage-history .history-items { justify-content: flex-start; }
+      .homepage-subtitle {
+        color: var(--text-secondary); font-size: 1rem; margin-bottom: 2rem;
+        animation: fadeInUp 0.8s ease-out 0.15s both;
+        font-weight: 400; letter-spacing: 0.01em;
+      }
+
+      /* ====== FLOATING 3D SHAPES ====== */
+      .floating-shapes { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+      .floating-shape {
+        position: absolute; border-radius: 20%;
+        background: var(--text-primary);
+      }
+      /* Dark mode: more visible shapes */
+      .floating-shape { opacity: 0.08; }
+      /* Light mode: subtle but visible */
+      html.light-theme .floating-shape { opacity: 0.06; background: #000; }
+      .shape-1 { width: 140px; height: 140px; top: 8%; left: 5%; filter: blur(2px); animation: drift 18s ease-in-out infinite; border-radius: 30%; }
+      .shape-2 { width: 90px; height: 90px; top: 12%; right: 10%; filter: blur(8px); animation: float 14s ease-in-out infinite 2s; border-radius: 50%; }
+      .shape-3 { width: 180px; height: 180px; bottom: 18%; left: 6%; filter: blur(12px); animation: floatReverse 20s ease-in-out infinite 1s; border-radius: 35%; }
+      .shape-4 { width: 70px; height: 70px; top: 48%; right: 8%; filter: blur(1px); animation: drift 15s ease-in-out infinite 3s; border-radius: 25%; }
+      .shape-5 { width: 220px; height: 220px; bottom: 3%; right: 12%; filter: blur(16px); animation: float 22s ease-in-out infinite 4s; border-radius: 40%; }
+      .shape-6 { width: 50px; height: 50px; top: 28%; left: 22%; filter: blur(1px); animation: drift 12s ease-in-out infinite 1.5s; border-radius: 50%; }
+      .shape-7 { width: 110px; height: 110px; top: 68%; left: 38%; filter: blur(10px); animation: floatReverse 17s ease-in-out infinite 5s; border-radius: 28%; }
+      .shape-8 { width: 75px; height: 75px; top: 6%; left: 52%; filter: blur(4px); animation: float 16s ease-in-out infinite 2.5s; border-radius: 45%; }
+      .shape-9 { width: 100px; height: 100px; bottom: 32%; right: 28%; filter: blur(6px); animation: drift 19s ease-in-out infinite 3.5s; border-radius: 32%; }
+      .homepage > * { position: relative; z-index: 1; }
+
+      @media (max-width: 768px) {
+        .homepage-logo { width: 52px; height: 52px; }
+        .homepage-title { font-size: 2.2rem; }
+        .homepage-search-container { max-width: 90%; }
+        .homepage-search-container .search-input { font-size: 1.1rem; }
+        .shape-1, .shape-5 { display: none; }
+        .theme-toggle.header-theme-toggle { display: none; }
+        
+        .app-header.sticky-scrolled .header-search-compact { display: none; }
+        .main-search-wrapper.hidden {
+            opacity: 1;
+            transform: none;
+            pointer-events: auto;
+        }
+      }
+
       /* Settings Modal */
       .modal-backdrop {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -222,6 +389,7 @@
         background-color: var(--bg); border: 1px solid var(--border); border-radius: 16px;
         padding: 1.5rem; width: 90%; max-width: 400px;
         display: flex; flex-direction: column; gap: 1.5rem;
+        box-sizing: border-box;
       }
       .modal-section-title {
         font-size: 0.9em; color: var(--text-secondary); font-weight: 500;
@@ -263,6 +431,7 @@
         justify-content: space-between;
         align-items: center;
         transition: border-color 0.2s ease;
+        box-sizing: border-box;
       }
       .custom-select-trigger:hover, .custom-select-container.open .custom-select-trigger {
         border-color: var(--accent);
@@ -297,15 +466,13 @@
         border-radius: 6px;
         cursor: pointer;
         transition: background-color 0.2s ease, color 0.2s ease;
+        color: var(--text-primary);
       }
       .custom-select-option:hover {
         background-color: var(--surface);
       }
       .custom-select-option.selected {
         background-color: var(--accent);
-        color: white;
-      }
-      html.light-theme .custom-select-option.selected {
         color: var(--bg);
       }
       
@@ -321,11 +488,8 @@
         font-size: 1rem;
         font-weight: 500;
         background-color: var(--accent);
-        color: white;
-        transition: background-color 0.2s ease, transform 0.2s ease;
-      }
-      html.light-theme .save-button {
         color: var(--bg);
+        transition: background-color 0.2s ease, transform 0.2s ease;
       }
       .save-button:hover {
         filter: brightness(1.1);
@@ -337,8 +501,7 @@
   "imports": {
     "react/": "https://esm.sh/react@^19.1.0/",
     "react": "https://esm.sh/react@^19.1.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.16.0"
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/"
   }
 }
 </script>
