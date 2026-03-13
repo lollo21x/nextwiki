@@ -37,7 +37,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, langParam
     e.preventDefault();
     setError(null);
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError(t.passwordsDoNotMatch);
       return;
     }
     try {
@@ -157,68 +157,68 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, langParam
                 boxSizing: 'border-box'
               }}
               required
-             />
-             <div style={{ position: 'relative' }}>
-               <input
-                 type={showPassword ? 'text' : 'password'}
-                 placeholder={t.password}
-                 value={password}
-                 onChange={(e) => setPassword(e.target.value)}
-                 style={{
-                   width: '100%',
-                   padding: '12px',
-                   paddingRight: '48px',
-                   borderRadius: '12px',
-                   border: '1px solid var(--border)',
-                   backgroundColor: 'var(--surface)',
-                   color: 'var(--text-primary)',
-                   fontSize: '1rem',
-                   outline: 'none',
-                   boxSizing: 'border-box'
-                 }}
-                 required
-               />
-               <button
-                 type="button"
-                 onClick={() => setShowPassword(!showPassword)}
-                 style={{
-                   position: 'absolute',
-                   right: '12px',
-                   top: '50%',
-                   transform: 'translateY(-50%)',
-                   background: 'none',
-                   border: 'none',
-                   color: 'var(--text-secondary)',
-                   cursor: 'pointer',
-                   padding: '4px'
-                 }}
-               >
-                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-               </button>
-             </div>
-             <button
-               type="submit"
-               style={{
-                 width: '100%',
-                 padding: '12px',
-                 borderRadius: '12px',
-                 border: 'none',
-                 backgroundColor: 'var(--accent)',
-                 color: 'var(--bg)',
-                 fontSize: '1rem',
-                 fontWeight: '500',
-                 cursor: 'pointer',
-                 transition: 'filter 0.2s ease, transform 0.2s ease'
-               }}
-             >
-               {t.login}
-             </button>
+            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder={t.password}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  paddingRight: '48px',
+                  borderRadius: '12px',
+                  border: '1px solid var(--border)',
+                  backgroundColor: 'var(--surface)',
+                  color: 'var(--text-primary)',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  padding: '4px'
+                }}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            <button
+              type="submit"
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '12px',
+                border: 'none',
+                backgroundColor: 'var(--accent)',
+                color: 'var(--bg)',
+                fontSize: '1rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'filter 0.2s ease, transform 0.2s ease'
+              }}
+            >
+              {t.login}
+            </button>
           </form>
         ) : (
           <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <input
               type="text"
-              placeholder="First Name"
+              placeholder={t.firstName}
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               style={{
@@ -236,7 +236,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, langParam
             />
             <input
               type="text"
-              placeholder="Last Name"
+              placeholder={t.lastName}
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               style={{
@@ -311,7 +311,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, langParam
             <div style={{ position: 'relative' }}>
               <input
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Confirm Password"
+                placeholder={t.confirmPassword}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 style={{
@@ -368,7 +368,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, langParam
 
         <div style={{ display: 'flex', alignItems: 'center', margin: '1.5rem 0' }}>
           <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border)' }} />
-          <span style={{ padding: '0 12px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Or</span>
+          <span style={{ padding: '0 12px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{t.or}</span>
           <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border)' }} />
         </div>
 
@@ -391,7 +391,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, langParam
           }}
         >
           <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style={{ width: '16px', height: '16px' }} />
-          Sign in with Google
+          {t.signInWithGoogle}
         </button>
       </div>
     </div>
