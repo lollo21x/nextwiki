@@ -14,62 +14,43 @@ interface SearchBarProps {
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading, placeholder, typingWords }) => {
   const [query, setQuery] = useState('');
   const [animatedPlaceholder, setAnimatedPlaceholder] = useState(placeholder);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isTypingActiveRef = useRef(false);
+  const [isBlurred, setIsBlurred] = useState(false);
+  const poolTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const cycleIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Reset to default placeholder if no typing words or query is not empty
+    // If we have a query or no pool, just show default placeholder
     if (!typingWords || typingWords.length === 0 || query !== '') {
       setAnimatedPlaceholder(placeholder);
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      isTypingActiveRef.current = false;
+      setIsBlurred(false);
+      if (poolTimeoutRef.current) clearTimeout(poolTimeoutRef.current);
+      if (cycleIntervalRef.current) clearInterval(cycleIntervalRef.current);
       return;
     }
 
-    let isMounted = true;
-    let wordIndex = Math.floor(Math.random() * typingWords.length);
-    let charIndex = 0;
-    let isDeleting = false;
+    // Start behavior after 4 seconds
+    poolTimeoutRef.current = setTimeout(() => {
+      if (query !== '') return;
 
-    const type = () => {
-      if (!isMounted || !isTypingActiveRef.current || query !== '') return;
-      
-      const currentWord = typingWords[wordIndex];
-      
-      if (isDeleting) {
-        setAnimatedPlaceholder(currentWord.substring(0, charIndex - 1));
-        charIndex--;
-      } else {
-        setAnimatedPlaceholder(currentWord.substring(0, charIndex + 1));
-        charIndex++;
-      }
+      const changePlaceholder = () => {
+        setIsBlurred(true);
+        setTimeout(() => {
+          const randomIndex = Math.floor(Math.random() * typingWords.length);
+          setAnimatedPlaceholder(typingWords[randomIndex]);
+          setIsBlurred(false);
+        }, 300); // Reverted to 300ms
+      };
 
-      let typingSpeed = isDeleting ? 30 : 80;
+      // Initial change
+      changePlaceholder();
 
-      if (!isDeleting && charIndex === currentWord.length) {
-        typingSpeed = 2000; // Pause at end of word
-        isDeleting = true;
-      } else if (isDeleting && charIndex === 0) {
-        isDeleting = false;
-        wordIndex = Math.floor(Math.random() * typingWords.length);
-        typingSpeed = 500; // Pause before new word
-      }
-
-      typingTimeoutRef.current = setTimeout(type, typingSpeed);
-    };
-
-    // Wait 3 seconds before starting the animation
-    const initTimeout = setTimeout(() => {
-      if (isMounted && query === '') {
-        isTypingActiveRef.current = true;
-        type();
-      }
-    }, 3000);
+      // Cycle every 4 seconds (keeping the 4s timing between words)
+      cycleIntervalRef.current = setInterval(changePlaceholder, 4000);
+    }, 4000);
 
     return () => {
-      isMounted = false;
-      clearTimeout(initTimeout);
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      if (poolTimeoutRef.current) clearTimeout(poolTimeoutRef.current);
+      if (cycleIntervalRef.current) clearInterval(cycleIntervalRef.current);
     };
   }, [typingWords, placeholder, query]);
 
@@ -106,10 +87,15 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading, placeholder,
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={animatedPlaceholder}
-          className="search-input"
+          className={`search-input ${isBlurred ? 'placeholder-blurred' : ''}`}
           aria-label="Search for a topic"
           disabled={isLoading}
           autoComplete="off"
+          style={{
+            transition: 'filter 0.3s ease, opacity 0.3s ease',
+            filter: isBlurred ? 'blur(4px)' : 'none',
+            opacity: isBlurred ? 0.5 : 1
+          }}
         />
       </form>
     </div>
