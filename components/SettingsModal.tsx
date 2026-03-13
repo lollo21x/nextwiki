@@ -104,7 +104,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     <div className="modal-backdrop" onClick={handleBackdropClick}>
       <div className="modal-content">
         <div>
-          <h3 className="modal-section-title">Accent Color</h3>
+          <h3 className="modal-section-title">{translations.accentColor}</h3>
           <div className="color-swatches">
             {ACCENT_COLORS.map(color => (
               <button
@@ -145,7 +145,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         <div>
-          <h3 className="modal-section-title">Language</h3>
+          <h3 className="modal-section-title">{translations.language}</h3>
           <div className={`custom-select-container ${isLangDropdownOpen ? 'open' : ''}`} ref={langDropdownRef}>
             <div className="custom-select-trigger" onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)} style={{ borderRadius: '32px' }}>
               <span>{languageNameMap[selectedLang]}</span>
