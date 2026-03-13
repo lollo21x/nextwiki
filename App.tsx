@@ -522,7 +522,12 @@ const App: React.FC = () => {
 
 
           <div className="homepage-search-container">
-            <SearchBar onSearch={handleTopicChange} isLoading={false} placeholder={t.search} />
+            <SearchBar
+              onSearch={handleTopicChange}
+              isLoading={false}
+              placeholder={t.search}
+              typingWords={t.placeholderPool}
+            />
           </div>
 
           {history.length > 0 && (
