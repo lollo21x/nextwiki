@@ -2,14 +2,17 @@ import React, { useState } from 'react';
 import { X, Eye, EyeOff, User as UserIcon } from 'lucide-react';
 import { signInWithEmailAndPassword, signInWithPopup, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, googleProvider } from '../src/services/firebase';
+import { translations } from '../utils/translations';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  langParams?: typeof translations['en'];
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, langParams }) => {
   if (!isOpen) return null;
+  const t = langParams || translations['en'];
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,7 +67,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', padding: '0' }}>
           <h2 style={{ fontSize: '1.2rem', fontWeight: '500', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <UserIcon size={20} />
-            {activeTab === 'login' ? 'Login' : 'Sign Up'}
+            {activeTab === 'login' ? t.login : t.signup}
           </h2>
           <button
             onClick={onClose}
@@ -101,7 +104,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             }}
             onClick={() => setActiveTab('login')}
           >
-            Login
+            {t.login}
           </button>
           <button
             style={{
@@ -118,7 +121,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             }}
             onClick={() => setActiveTab('signup')}
           >
-            Sign Up
+            {t.signup}
           </button>
         </div>
 
@@ -139,7 +142,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <form onSubmit={handleEmailLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <input
               type="email"
-              placeholder="Email"
+              placeholder={t.email}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               style={{
@@ -158,7 +161,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
              <div style={{ position: 'relative' }}>
                <input
                  type={showPassword ? 'text' : 'password'}
-                 placeholder="Password"
+                 placeholder={t.password}
                  value={password}
                  onChange={(e) => setPassword(e.target.value)}
                  style={{
@@ -208,7 +211,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                  transition: 'filter 0.2s ease, transform 0.2s ease'
                }}
              >
-               Login
+               {t.login}
              </button>
           </form>
         ) : (
@@ -251,7 +254,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             />
             <input
               type="email"
-              placeholder="Email"
+              placeholder={t.email}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               style={{
@@ -270,7 +273,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <div style={{ position: 'relative' }}>
               <input
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Password"
+                placeholder={t.password}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={{
@@ -358,7 +361,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 transition: 'filter 0.2s ease, transform 0.2s ease'
               }}
             >
-              Sign Up
+              {t.signup}
             </button>
           </form>
         )}
