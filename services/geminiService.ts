@@ -6,7 +6,7 @@ import { LanguageCode, languageNameMap } from '../utils/translations';
 
 // --- OpenRouter Configuration ---
 export const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-export const OPENROUTER_API_KEY = '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';
+export const OPENROUTER_API_KEY = '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';
 // --- End OpenRouter Configuration ---
 
 // --- Pexels Configuration for Images ---
@@ -115,13 +115,60 @@ export async function* streamDefinition(
 }
 
 /**
+ * Translates a query to English using MyMemory API with a 5-second timeout.
+ * Falls back to the original query on timeout or error.
+ */
+async function translateWithMyMemory(query: string, langCode: LanguageCode): Promise<string> {
+  // No translation needed if already English
+  if (langCode === 'en') return query;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(query)}&langpair=${langCode}|en`;
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.warn(`MyMemory API returned status ${response.status}, using original query.`);
+      return query;
+    }
+
+    const data = await response.json();
+    if (data.responseStatus !== 200 || !data.responseData?.translatedText) {
+      console.warn('MyMemory: unexpected response, using original query.');
+      return query;
+    }
+
+    const translated = data.responseData.translatedText;
+    console.log(`MyMemory translated "${query}" (${langCode}) → "${translated}" (en)`);
+    return translated;
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      console.warn('MyMemory API timeout (5s), using original query as fallback.');
+    } else {
+      console.warn('MyMemory API error, using original query as fallback:', error);
+    }
+    return query;
+  }
+}
+
+/**
  * Fetches an image for a given topic from the Pexels API.
+ * Translates the query to English via MyMemory first (with 5s timeout fallback).
  * @param topic The topic to search for an image.
+ * @param language The current app language for translation.
  * @returns A promise that resolves to a URL of the image.
  */
-export async function generateImage(topic: string): Promise<string> {
-  const url = `${PEXELS_API_URL}?query=${encodeURIComponent(topic)}&per_page=1&orientation=landscape`;
-  
+export async function generateImage(topic: string, language: LanguageCode = 'en'): Promise<string> {
+  // Step 1: Translate to English via MyMemory
+  const translatedQuery = await translateWithMyMemory(topic, language);
+
+  // Step 2: Search Pexels with the (translated) query
+  const url = `${PEXELS_API_URL}?query=${encodeURIComponent(translatedQuery)}&per_page=15&orientation=landscape`;
+
   try {
     const response = await fetch(url, {
       headers: {
@@ -133,7 +180,7 @@ export async function generateImage(topic: string): Promise<string> {
       const responseText = await response.text();
       // Pexels might return plain text for auth errors
       if (response.status === 401) {
-          throw new Error(`Pexels API Error: Authentication failed. Please check your API key.`);
+        throw new Error(`Pexels API Error: Authentication failed. Please check your API key.`);
       }
       throw new Error(`Pexels API Error: ${response.status} ${responseText}`);
     }
@@ -141,14 +188,14 @@ export async function generateImage(topic: string): Promise<string> {
     const data = await response.json();
 
     if (!data.photos || data.photos.length === 0) {
-      console.warn(`No image found on Pexels for "${topic}".`);
+      console.warn(`No image found on Pexels for "${translatedQuery}".`);
       throw new Error(`No image found for "${topic}".`);
     }
 
     // Use the landscape version for the 16:9 container
     const imageUrl = data.photos[0].src.landscape;
     if (!imageUrl) {
-        throw new Error('Image source URL not found in Pexels response.');
+      throw new Error('Image source URL not found in Pexels response.');
     }
 
     return imageUrl;
@@ -159,3 +206,4 @@ export async function generateImage(topic: string): Promise<string> {
     throw new Error(`Could not retrieve image: ${errorMessage}`);
   }
 }
+
