@@ -1,7 +1,7 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
-*/
+ */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { streamDefinition, generateImage, GenerationMode } from './services/geminiService';
@@ -24,15 +24,29 @@ import { auth } from './src/services/firebase';
 const getTopicFromURL = (): string => {
   if (typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search);
-    return params.get('q')?.trim() || 'wiki';
+    return params.get('q')?.trim() || '';
   }
-  return 'wiki';
+  return '';
 };
+
+const FloatingShapes: React.FC = () => (
+  <div className="floating-shapes">
+    <div className="floating-shape shape-1" />
+    <div className="floating-shape shape-2" />
+    <div className="floating-shape shape-3" />
+    <div className="floating-shape shape-4" />
+    <div className="floating-shape shape-5" />
+    <div className="floating-shape shape-6" />
+    <div className="floating-shape shape-7" />
+    <div className="floating-shape shape-8" />
+    <div className="floating-shape shape-9" />
+  </div>
+);
 
 const App: React.FC = () => {
   const [currentTopic, setCurrentTopic] = useState<string>(getTopicFromURL);
   const [content, setContent] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -45,7 +59,7 @@ const App: React.FC = () => {
   const [language, setLanguage] = useState<LanguageCode>(() => (localStorage.getItem('language') || 'en') as LanguageCode);
   const [generationMode, setGenerationMode] = useState<GenerationMode>(() => (localStorage.getItem('generationMode') || 'encyclopedia') as GenerationMode);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  // --- End Settings State ---
+  const [isScrolled, setIsScrolled] = useState(false);
 
   // --- Auth State ---
   const { user, isLoading: authLoading } = useAuth();
@@ -53,14 +67,13 @@ const App: React.FC = () => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isUserButtonHovered, setIsUserButtonHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  // --- End Auth State ---
 
   // --- Share and Extend State ---
   const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
   const [isExtending, setIsExtending] = useState(false);
   const [showHubBack, setShowHubBack] = useState(false);
-  // --- End Share and Extend State ---
 
+  const isHomePage = currentTopic === '';
   const t = translations[language];
 
   useEffect(() => {
@@ -122,6 +135,14 @@ const App: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
 
   const toggleTheme = () => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
@@ -146,8 +167,21 @@ const App: React.FC = () => {
     }
   }, [currentTopic]);
 
+  const handleDeleteHistoryItem = useCallback((topicToRemove: string) => {
+    setHistory(prevHistory => prevHistory.filter(item => item !== topicToRemove));
+  }, []);
+
   useEffect(() => {
-    if (!currentTopic) return;
+    if (!currentTopic) {
+      // Homepage: reset content state
+      setContent('');
+      setIsLoading(false);
+      setError(null);
+      setImageUrl(null);
+      setImageError(null);
+      setGenerationTime(null);
+      return;
+    }
 
     let isCancelled = false;
 
@@ -199,7 +233,12 @@ const App: React.FC = () => {
     return () => { isCancelled = true; };
   }, [currentTopic, language, generationMode]);
 
-  const handleHomeClick = () => handleTopicChange('wiki');
+  const handleHomeClick = () => {
+    const url = new URL(window.location.toString());
+    url.searchParams.delete('q');
+    window.history.pushState({}, '', url);
+    setCurrentTopic('');
+  };
 
   const handleExtendContent = useCallback(async () => {
     if (isExtending || !content) return;
@@ -301,13 +340,122 @@ const App: React.FC = () => {
     </svg>
   );
 
+  // ===== HOMEPAGE VIEW =====
+  if (isHomePage) {
+    return (
+      <div>
+        {/* Minimal header for homepage */}
+        <header className="app-header">
+          <div />
+          <div className="header-controls">
+            <button onClick={() => window.open('https://privacy.dootinc.dpdns.org', '_blank')} className="info-toggle" aria-label="Privacy Policy" style={{ borderRadius: '32px' }}>
+              <Info size={16} />
+            </button>
+            {showHubBack && (
+              <button onClick={() => window.location.href = 'https://hub4d.lollo.dpdns.org/'} className="info-toggle" aria-label="Back to Hub" style={{ borderRadius: '32px' }}>
+                <ArrowLeft size={16} />
+              </button>
+            )}
+            {user ? (
+              isMobile ? (
+                <button onClick={() => setIsLogoutModalOpen(true)} className="user-toggle" aria-label="User account" style={{ borderRadius: '32px' }}>
+                  <User size={16} />
+                </button>
+              ) : (
+                <button
+                  onClick={handleLogout}
+                  onMouseEnter={() => setIsUserButtonHovered(true)}
+                  onMouseLeave={() => setIsUserButtonHovered(false)}
+                  className="user-pill"
+                  aria-label="Logout"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: isUserButtonHovered ? '8px 16px' : '8px 12px',
+                    borderRadius: '32px',
+                    backgroundColor: isUserButtonHovered ? 'var(--accent-red)' : 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    color: isUserButtonHovered ? 'white' : 'var(--text-primary)',
+                    fontSize: '0.9rem', fontWeight: '500', cursor: 'pointer',
+                    transition: 'all 0.2s ease', whiteSpace: 'nowrap'
+                  }}
+                >
+                  <User size={14} />
+                  <span>{user.displayName || user.email?.split('@')[0] || 'User'}</span>
+                  {isUserButtonHovered && <LogOut size={14} />}
+                </button>
+              )
+            ) : (
+              <button onClick={() => setIsAuthModalOpen(true)} className="user-toggle" aria-label="User account" style={{ borderRadius: '32px' }}>
+                <User size={16} />
+              </button>
+            )}
+            <button onClick={toggleTheme} className="theme-toggle header-theme-toggle" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`} style={{ borderRadius: '32px' }}>
+              <ThemeIcon />
+            </button>
+            <button onClick={() => setIsSettingsOpen(true)} className="settings-toggle" aria-label="Open settings" style={{ borderRadius: '24px' }}>
+              <div className="settings-icon-img"></div>
+            </button>
+          </div>
+        </header>
+
+        {/* Homepage centered content */}
+        <div className="homepage">
+          <FloatingShapes />
+
+          <div className="homepage-brand">
+            <div className="homepage-logo" />
+            <h1 className="homepage-title">nextwiki</h1>
+          </div>
+
+
+          <div className="homepage-search-container">
+            <SearchBar onSearch={handleTopicChange} isLoading={false} placeholder={t.search} />
+          </div>
+
+          {history.length > 0 && (
+            <div className="homepage-history">
+              <HistoryDisplay history={history} onHistoryClick={handleTopicChange} onDeleteHistoryItem={handleDeleteHistoryItem} title={t.recent} />
+            </div>
+          )}
+        </div>
+
+        <footer className="sticky-footer">
+          <p className="footer-text" style={{ margin: 0 }}>
+            {t.madeBy} <a href="http://lollo.dpdns.org" target="_blank" rel="noopener noreferrer">lollo21</a>
+          </p>
+        </footer>
+
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          accentColor={accentColor}
+          language={language}
+          generationMode={generationMode}
+          onSave={handleSaveSettings}
+          translations={t}
+        />
+        <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} langParams={t} />
+        <LogoutModal isOpen={isLogoutModalOpen} onClose={() => setIsLogoutModalOpen(false)} onConfirm={handleLogout} translations={t} />
+      </div>
+    );
+  }
+
+  // ===== ARTICLE VIEW (existing behavior) =====
   return (
     <div>
-      <header className="app-header">
+      <header className={`app-header ${!isHomePage && isScrolled ? 'sticky-scrolled' : ''}`}>
         <div className="logo-container" onClick={handleHomeClick} role="button" tabIndex={0}>
           <div className="logo-image"></div>
           <h1>nextwiki</h1>
         </div>
+        
+        {/* Compact search bar that appears when scrolled */}
+        {!isHomePage && (
+          <div className="header-search-compact">
+            <SearchBar onSearch={handleTopicChange} isLoading={isLoading} placeholder={t.search} />
+          </div>
+        )}
+
         <div className="header-controls">
           <button onClick={() => window.open('https://privacy.dootinc.dpdns.org', '_blank')} className="info-toggle" aria-label="Privacy Policy" style={{ borderRadius: '32px' }}>
             <Info size={16} />
@@ -330,23 +478,18 @@ const App: React.FC = () => {
                 className="user-pill"
                 aria-label="Logout"
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
+                  display: 'flex', alignItems: 'center', gap: '8px',
                   padding: isUserButtonHovered ? '8px 16px' : '8px 12px',
                   borderRadius: '32px',
                   backgroundColor: isUserButtonHovered ? 'var(--accent-red)' : 'var(--surface)',
                   border: '1px solid var(--border)',
                   color: isUserButtonHovered ? 'white' : 'var(--text-primary)',
-                  fontSize: '0.9rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  whiteSpace: 'nowrap'
+                  fontSize: '0.9rem', fontWeight: '500', cursor: 'pointer',
+                  transition: 'all 0.2s ease', whiteSpace: 'nowrap'
                 }}
               >
                 <User size={14} />
-                <span>{user.displayName || user.email?.split('@')[0] || 'User'}</span>
+                <span className="user-name-text">{user.displayName || user.email?.split('@')[0] || 'User'}</span>
                 {isUserButtonHovered && <LogOut size={14} />}
               </button>
             )
@@ -355,7 +498,7 @@ const App: React.FC = () => {
               <User size={16} />
             </button>
           )}
-          <button onClick={toggleTheme} className="theme-toggle" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`} style={{ borderRadius: '32px' }}>
+          <button onClick={toggleTheme} className="theme-toggle header-theme-toggle" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`} style={{ borderRadius: '32px' }}>
             <ThemeIcon />
           </button>
           <button onClick={() => setIsSettingsOpen(true)} className="settings-toggle" aria-label="Open settings" style={{ borderRadius: '24px' }}>
@@ -364,10 +507,12 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <SearchBar onSearch={handleTopicChange} isLoading={isLoading} placeholder={t.search} />
+      <div className={`main-search-wrapper ${isScrolled ? 'hidden' : ''}`}>
+        <SearchBar onSearch={handleTopicChange} isLoading={isLoading} placeholder={t.search} />
+      </div>
 
       <main>
-        <HistoryDisplay history={history} onHistoryClick={handleTopicChange} title={t.recent} />
+        <HistoryDisplay history={history} onHistoryClick={handleTopicChange} onDeleteHistoryItem={handleDeleteHistoryItem} title={t.recent} />
 
         <ImageDisplay imageUrl={imageUrl} topic={currentTopic} isLoading={isLoading && !imageUrl} error={imageError} />
 
@@ -444,6 +589,7 @@ const App: React.FC = () => {
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
+        langParams={t}
       />
 
       <LogoutModal
@@ -459,6 +605,7 @@ const App: React.FC = () => {
         url={window.location.href}
         title={`${currentTopic} - nextwiki`}
         theme={theme}
+        langParams={t}
       />
 
     </div>
