@@ -17,7 +17,7 @@ import { AuthModal } from './components/AuthModal';
 import ShareMenu from './components/ShareMenu';
 import { useAuth } from './src/hooks/useAuth';
 import { translations, LanguageCode, languageNameMap } from './utils/translations';
-import { User, LogOut, Info, Plus, Share2, ArrowLeft } from 'lucide-react';
+import { User, LogOut, Info, Plus, Share2, ArrowLeft, RefreshCw, MessageCircle, X } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from './src/services/firebase';
 
@@ -72,6 +72,12 @@ const App: React.FC = () => {
   const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
   const [isExtending, setIsExtending] = useState(false);
   const [showHubBack, setShowHubBack] = useState(false);
+
+  // --- Ask More State ---
+  const [isAskMoreOpen, setIsAskMoreOpen] = useState(false);
+  const [askMoreQuery, setAskMoreQuery] = useState('');
+  const [askMoreResponse, setAskMoreResponse] = useState('');
+  const [isAskMoreLoading, setIsAskMoreLoading] = useState(false);
 
   const isHomePage = currentTopic === '';
   const t = translations[language];
@@ -194,7 +200,7 @@ const App: React.FC = () => {
       setGenerationTime(null);
       const startTime = performance.now();
 
-      generateImage(currentTopic)
+      generateImage(currentTopic, language)
         .then(url => { if (!isCancelled) setImageUrl(url); })
         .catch(err => {
           if (!isCancelled) {
@@ -317,6 +323,113 @@ const App: React.FC = () => {
       setIsExtending(false);
     }
   }, [content, currentTopic, language, isExtending]);
+
+  const handleRetry = useCallback(() => {
+    if (!currentTopic || isLoading) return;
+    // Re-trigger the content generation by forcing a re-fetch
+    setContent('');
+    setIsLoading(true);
+    setError(null);
+    setImageError(null);
+    setGenerationTime(null);
+    setIsAskMoreOpen(false);
+    setAskMoreResponse('');
+    setAskMoreQuery('');
+
+    let isCancelled = false;
+    const startTime = performance.now();
+
+    (async () => {
+      let accumulatedContent = '';
+      try {
+        for await (const chunk of streamDefinition(currentTopic, language, generationMode)) {
+          if (isCancelled) break;
+          if (chunk.startsWith('Error:')) throw new Error(chunk);
+          accumulatedContent += chunk;
+          if (!isCancelled) setContent(accumulatedContent);
+        }
+      } catch (e: unknown) {
+        if (!isCancelled) {
+          const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred';
+          setError(errorMessage);
+          setContent('');
+          console.error(e);
+        }
+      } finally {
+        if (!isCancelled) {
+          const endTime = performance.now();
+          setGenerationTime(endTime - startTime);
+          setIsLoading(false);
+        }
+      }
+    })();
+  }, [currentTopic, language, generationMode, isLoading]);
+
+  const handleAskMore = useCallback(async (question: string) => {
+    if (!question.trim() || isAskMoreLoading || !content) return;
+
+    setIsAskMoreLoading(true);
+    setAskMoreResponse('');
+
+    try {
+      const prompt = `The user was reading an article about "${currentTopic}". Here is the article content:\n\n${content.substring(0, 2000)}\n\nThe user now asks: "${question}"\n\nProvide a brief, concise answer (2-3 sentences max) in ${languageNameMap[language] || 'English'}. Do not use markdown, titles, or any special formatting. Respond with only the text of the response itself.`;
+
+      const response = await fetch(OPENROUTER_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'openrouter/free',
+          messages: [{ role: 'user', content: prompt }],
+          stream: true,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('Could not get response body reader.');
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let accumulated = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const jsonStr = line.substring(6);
+            if (jsonStr === '[DONE]') break;
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const chunk = parsed.choices[0]?.delta?.content;
+              if (chunk) {
+                accumulated += chunk;
+                setAskMoreResponse(accumulated);
+              }
+            } catch (e) {
+              console.error('Failed to parse stream chunk:', jsonStr, e);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error in ask more:', e);
+      setAskMoreResponse('Error generating response.');
+    } finally {
+      setIsAskMoreLoading(false);
+    }
+  }, [content, currentTopic, language, isAskMoreLoading]);
 
   const handleSaveSettings = (settings: { accentColor: string; language: LanguageCode; generationMode: GenerationMode }) => {
     setAccentColor(settings.accentColor);
@@ -448,7 +561,7 @@ const App: React.FC = () => {
           <div className="logo-image"></div>
           <h1>nextwiki</h1>
         </div>
-        
+
         {/* Compact search bar that appears when scrolled */}
         {!isHomePage && (
           <div className="header-search-compact">
@@ -539,23 +652,106 @@ const App: React.FC = () => {
                 isExtending={isExtending}
               />
               {!isLoading && !isExtending && (
-                <div className="action-buttons">
-                  <button
-                    onClick={handleExtendContent}
-                    className="more-button"
-                    disabled={isExtending}
-                  >
-                    <Plus size={16} />
-                    {isExtending ? t.extending : t.more}
-                  </button>
-                  <button
-                    onClick={() => setIsShareMenuOpen(true)}
-                    className="share-button"
-                  >
-                    <Share2 size={16} />
-                    {t.share}
-                  </button>
-                </div>
+                <>
+                  <div className="action-buttons">
+                    <button
+                      onClick={handleRetry}
+                      className="more-button"
+                    >
+                      <RefreshCw size={16} />
+                      {t.retry}
+                    </button>
+                    <button
+                      onClick={handleExtendContent}
+                      className="more-button"
+                      disabled={isExtending}
+                    >
+                      <Plus size={16} />
+                      {isExtending ? t.extending : t.more}
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (isAskMoreOpen) {
+                          setIsAskMoreOpen(false);
+                          setAskMoreResponse('');
+                          setAskMoreQuery('');
+                        } else {
+                          setIsAskMoreOpen(true);
+                        }
+                      }}
+                      className="more-button"
+                      style={isAskMoreOpen ? {
+                        backgroundColor: 'var(--text-primary)',
+                        color: 'var(--bg)',
+                        borderColor: 'var(--text-primary)',
+                      } : {}}
+                    >
+                      {isAskMoreOpen ? <X size={16} /> : <MessageCircle size={16} />}
+                      {isAskMoreOpen ? t.close : t.askMore}
+                    </button>
+                    <button
+                      onClick={() => setIsShareMenuOpen(true)}
+                      className="share-button"
+                    >
+                      <Share2 size={16} />
+                      {t.share}
+                    </button>
+                  </div>
+
+                  {isAskMoreOpen && (
+                    <div style={{ marginTop: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleAskMore(askMoreQuery);
+                        }}
+                        style={{
+                          display: 'flex',
+                          gap: '0.5rem',
+                          alignItems: 'center',
+                          padding: '0.5rem 0.75rem',
+                          backgroundColor: 'var(--surface)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '32px',
+                        }}
+                      >
+                        <MessageCircle size={18} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
+                        <input
+                          type="text"
+                          value={askMoreQuery}
+                          onChange={(e) => setAskMoreQuery(e.target.value)}
+                          placeholder={t.askMorePlaceholder}
+                          disabled={isAskMoreLoading}
+                          style={{
+                            flex: 1,
+                            padding: '0.5rem',
+                            fontSize: '1rem',
+                            color: 'inherit',
+                            border: 'none',
+                            backgroundColor: 'transparent',
+                            outline: 'none',
+                          }}
+                          autoFocus
+                        />
+                      </form>
+                      {(askMoreResponse || isAskMoreLoading) && (
+                        <div style={{
+                          marginTop: '0.75rem',
+                          padding: '1rem',
+                          backgroundColor: 'var(--surface)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '32px',
+                          fontSize: '1rem',
+                          lineHeight: '1.6',
+                          animation: 'fadeIn 0.3s ease',
+                        }}>
+                          {askMoreResponse}
+                          {isAskMoreLoading && <span className="blinking-cursor">|</span>}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
