@@ -5,15 +5,19 @@
 import React, { useState } from 'react';
 import { Share2, Copy, X } from 'lucide-react';
 
+import { translations } from '../utils/translations';
+
 interface ShareMenuProps {
   isOpen: boolean;
   onClose: () => void;
   url: string;
   title: string;
   theme: string;
+  langParams?: typeof translations['en'];
 }
 
-const ShareMenu: React.FC<ShareMenuProps> = ({ isOpen, onClose, url, title, theme }) => {
+const ShareMenu: React.FC<ShareMenuProps> = ({ isOpen, onClose, url, title, theme, langParams }) => {
+  const t = langParams || translations['en'];
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
@@ -105,15 +109,26 @@ const ShareMenu: React.FC<ShareMenuProps> = ({ isOpen, onClose, url, title, them
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="share-menu-header">
-          <h3>Share</h3>
-          <button onClick={onClose} className="close-button">
-            <X size={20} />
+          <h3 style={{ margin: 0, fontWeight: 500 }}>{t.shareLink}</h3>
+          <button onClick={onClose} style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'var(--surface)',
+              border: '1px solid var(--border)',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s ease, border-color 0.2s ease'
+          }}>
+            <X size={16} />
           </button>
         </div>
         <div className="share-options">
           <button onClick={handleCopyLink} className="share-option copy-link">
             <Copy size={20} />
-            <span>{copied ? 'Copied!' : 'Copy Link'}</span>
+            <span>{copied ? t.copied : t.copyLink}</span>
           </button>
           {shareOptions.map((option) => (
             <a
