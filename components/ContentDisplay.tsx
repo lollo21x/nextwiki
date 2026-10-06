@@ -1,8 +1,8 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
-*/
-import React from 'react';
+ */
+import React, { useMemo } from 'react';
 
 interface ContentDisplayProps {
   content: string;
@@ -11,46 +11,93 @@ interface ContentDisplayProps {
   isExtending?: boolean;
 }
 
+/**
+ * Parse content into words and whitespace for interactive display
+ */
+const parseContent = (content: string): { type: 'word' | 'space'; value: string; index: number }[] => {
+  const result: { type: 'word' | 'space'; value: string; index: number }[] = [];
+  
+  // Split by whitespace but keep the whitespace
+  const parts = content.split(/(\s+)/).filter(Boolean);
+  
+  parts.forEach((part, index) => {
+    if (/\s/.test(part)) {
+      result.push({ type: 'space', value: part, index });
+    } else {
+      result.push({ type: 'word', value: part, index });
+    }
+  });
+  
+  return result;
+};
+
+/**
+ * Clean word for clickable action (remove punctuation)
+ */
+const cleanWord = (word: string): string => {
+  return word.replace(/[.,!?;:()"'\u2013\u2014\u2018\u2019\u201C\u201D]/g, '');
+};
+
+/**
+ * Interactive content that allows clicking on individual words
+ */
 const InteractiveContent: React.FC<{
   content: string;
   onWordClick: (word: string) => void;
 }> = ({ content, onWordClick }) => {
-  const words = content.split(/(\s+)/).filter(Boolean); // Keep whitespace for spacing
+  const parsed = useMemo(() => parseContent(content), [content]);
 
   return (
-    <p style={{ margin: 0 }}>
-      {words.map((word, index) => {
-        // Only make non-whitespace words clickable
-        if (/\S/.test(word)) {
-          const cleanWord = word.replace(/[.,!?;:()"']/g, '');
-          if (cleanWord) {
+    <div className="content-display">
+      <p className="content-text">
+        {parsed.map((part) => {
+          if (part.type === 'space') {
+            return <span key={`space-${part.index}`}>{part.value}</span>;
+          }
+          
+          const cleaned = cleanWord(part.value);
+          if (cleaned) {
             return (
               <button
-                key={index}
-                onClick={() => onWordClick(cleanWord)}
+                key={`word-${part.index}`}
+                onClick={() => onWordClick(cleaned)}
                 className="interactive-word"
-                aria-label={`Learn more about ${cleanWord}`}
+                aria-label={`Learn more about ${cleaned}`}
+                title={`Learn more about ${cleaned}`}
               >
-                {word}
+                {part.value}
               </button>
             );
           }
-        }
-        // Render whitespace as-is
-        return <span key={index}>{word}</span>;
-      })}
-    </p>
+          
+          return <span key={`char-${part.index}`}>{part.value}</span>;
+        })}
+      </p>
+    </div>
   );
 };
 
+/**
+ * Streaming content display with blinking cursor
+ */
 const StreamingContent: React.FC<{ content: string; isExtending?: boolean }> = ({ content, isExtending }) => (
-  <p style={{ margin: 0 }}>
-    {content}
-    {!isExtending && <span className="blinking-cursor">█</span>}
-  </p>
+  <div className="content-display">
+    <p className="content-text">
+      {content}
+      {!isExtending && <span className="blinking-cursor">\u2588</span>}
+    </p>
+  </div>
 );
 
-const ContentDisplay: React.FC<ContentDisplayProps> = ({ content, isLoading, onWordClick, isExtending }) => {
+/**
+ * Main ContentDisplay component that switches between loading and interactive states
+ */
+const ContentDisplay: React.FC<ContentDisplayProps> = ({ 
+  content, 
+  isLoading, 
+  onWordClick, 
+  isExtending 
+}) => {
   if (isLoading) {
     return <StreamingContent content={content} isExtending={isExtending} />;
   }

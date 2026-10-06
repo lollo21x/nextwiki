@@ -1,8 +1,8 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
-*/
-import React, { useState, useEffect, useRef } from 'react';
+ */
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -11,13 +11,20 @@ interface SearchBarProps {
   typingWords?: string[];
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading, placeholder, typingWords }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ 
+  onSearch, 
+  isLoading, 
+  placeholder, 
+  typingWords = [] 
+}) => {
   const [query, setQuery] = useState('');
   const [animatedPlaceholder, setAnimatedPlaceholder] = useState(placeholder);
   const [isBlurred, setIsBlurred] = useState(false);
   const poolTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const cycleIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
+  // Handle animated placeholder with typing words
   useEffect(() => {
     // If we have a query or no pool, just show default placeholder
     if (!typingWords || typingWords.length === 0 || query !== '') {
@@ -38,13 +45,13 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading, placeholder,
           const randomIndex = Math.floor(Math.random() * typingWords.length);
           setAnimatedPlaceholder(typingWords[randomIndex]);
           setIsBlurred(false);
-        }, 300); // Reverted to 300ms
+        }, 300);
       };
 
       // Initial change
       changePlaceholder();
 
-      // Cycle every 4 seconds (keeping the 4s timing between words)
+      // Cycle every 4 seconds
       cycleIntervalRef.current = setInterval(changePlaceholder, 4000);
     }, 4000);
 
@@ -54,21 +61,37 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading, placeholder,
     };
   }, [typingWords, placeholder, query]);
 
-  const handleSearch = (searchTerm: string) => {
+  // Handle search
+  const handleSearch = useCallback((searchTerm: string) => {
     if (searchTerm.trim() && !isLoading) {
       onSearch(searchTerm.trim());
       setQuery('');
     }
-  };
+  }, [onSearch, isLoading]);
 
+  // Handle form submit
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     handleSearch(query);
   };
 
+  // Handle clear input
+  const handleClear = () => {
+    setQuery('');
+    inputRef.current?.focus();
+  };
+
+  // Handle key down for better UX
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      setQuery('');
+      inputRef.current?.blur();
+    }
+  };
+
   return (
     <div className="search-container">
-      <form onSubmit={handleSubmit} className="search-form" role="search">
+      <form onSubmit={handleSubmit} className="search-form" role="search" aria-label="Search form">
         <svg
           className="search-icon"
           xmlns="http://www.w3.org/2000/svg"
@@ -83,6 +106,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading, placeholder,
           />
         </svg>
         <input
+          ref={inputRef}
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -91,12 +115,33 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading, placeholder,
           aria-label="Search for a topic"
           disabled={isLoading}
           autoComplete="off"
+          onKeyDown={handleKeyDown}
           style={{
             transition: 'filter 0.3s ease, opacity 0.3s ease',
             filter: isBlurred ? 'blur(4px)' : 'none',
             opacity: isBlurred ? 0.5 : 1
           }}
         />
+        {query && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="form-input-clearable clear-btn"
+            aria-label="Clear search"
+            tabIndex={-1}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+        <button
+          type="submit"
+          className="sr-only"
+          disabled={isLoading || !query.trim()}
+        >
+          Search
+        </button>
       </form>
     </div>
   );

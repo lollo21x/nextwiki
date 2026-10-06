@@ -1,3 +1,17 @@
+/* ===================================================================
+   NextWiki 2.0 - Main Stylesheet
+   Import all CSS modules
+   =================================================================== */
+
+@import url('./styles/variables.css');
+@import url('./styles/global.css');
+@import url('./styles/components.css');
+@import url('./styles/app.css');
+
+/* ===================================================================
+   Legacy Styles (for backward compatibility)
+   =================================================================== */
+
 /* Share Menu Styles within Modal */
 .share-menu-header {
   display: flex;
@@ -63,7 +77,6 @@
 }
 
 .share-option:hover img {
-  /* Invert colors on hover for Reddit icon */
   filter: invert(1);
 }
 

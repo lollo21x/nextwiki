@@ -1,9 +1,9 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
-*/
+ */
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, Clock } from 'lucide-react';
 
 interface HistoryDisplayProps {
   history: string[];
@@ -12,39 +12,62 @@ interface HistoryDisplayProps {
   title: string;
 }
 
-const HistoryDisplay: React.FC<HistoryDisplayProps> = ({ history, onHistoryClick, onDeleteHistoryItem, title }) => {
+/**
+ * History item component with delete functionality
+ */
+const HistoryItem: React.FC<{
+  item: string;
+  onClick: () => void;
+  onDelete: (e: React.MouseEvent) => void;
+}> = ({ item, onClick, onDelete }) => (
+  <div className="history-item" role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onClick()}>
+    <span
+      className="history-item-text"
+      onClick={onClick}
+    >
+      {item}
+    </span>
+    <button
+      className="history-item-delete"
+      onClick={onDelete}
+      aria-label={`Remove ${item} from history`}
+      tabIndex={-1}
+    >
+      <X size={14} />
+    </button>
+  </div>
+);
+
+/**
+ * Main HistoryDisplay component
+ */
+const HistoryDisplay: React.FC<HistoryDisplayProps> = ({ 
+  history, 
+  onHistoryClick, 
+  onDeleteHistoryItem, 
+  title 
+}) => {
   if (history.length === 0) {
     return null;
   }
 
   return (
-    <div className="history-container">
-      <h3 className="history-title">{title}</h3>
-      <div className="history-items">
+    <div className="history-container" aria-label="Search history">
+      <h3 className="history-title">
+        <Clock size={18} />
+        {title}
+      </h3>
+      <div className="history-items" role="list">
         {history.map((item) => (
-          <div key={item} className="history-item">
-            <span
-              className="history-item-text"
-              onClick={() => onHistoryClick(item)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter') onHistoryClick(item); }}
-            >
-              {item}
-            </span>
-            <div
-              className="history-item-delete"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDeleteHistoryItem(item);
-              }}
-              role="button"
-              tabIndex={0}
-              aria-label={`Remove ${item} from history`}
-            >
-              <X size={14} />
-            </div>
-          </div>
+          <HistoryItem
+            key={item}
+            item={item}
+            onClick={() => onHistoryClick(item)}
+            onDelete={(e) => {
+              e.stopPropagation();
+              onDeleteHistoryItem(item);
+            }}
+          />
         ))}
       </div>
     </div>
