@@ -17,7 +17,7 @@ import { AuthModal } from './components/AuthModal';
 import ShareMenu from './components/ShareMenu';
 import { useAuth } from './src/hooks/useAuth';
 import { translations, LanguageCode, languageNameMap } from './utils/translations';
-import { User, LogOut, Info, Plus, Share2, ArrowLeft, RefreshCw, MessageCircle, X, ChevronDown, Settings as SettingsIcon } from 'lucide-react';
+import { User, LogOut, Info, Plus, Share2, ArrowLeft, RefreshCw, MessageCircle, X, ArrowUp, Sun, Moon, Settings as SettingsIcon } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from './src/services/firebase';
 
@@ -55,16 +55,8 @@ const FloatingShapes: React.FC = () => (
 // Theme Toggle Icon Component
 // ===================================================================
 
-const ThemeToggleIcon: React.FC<{ theme: string }> = ({ theme }) => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-    {theme === 'dark' ? (
-      <path d="M12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8V16Z" />
-    ) : (
-      <path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" />
-    )}
-    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM12 20C7.58172 20 4 16.4183 4 12C4 7.58172 7.58172 4 12 4C16.4183 4 20 7.58172 20 12C20 16.4183 16.4183 20 12 20Z" />
-  </svg>
-);
+const ThemeToggleIcon: React.FC<{ theme: string }> = ({ theme }) =>
+  theme === 'dark' ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />;
 
 // ===================================================================
 // User Menu Dropdown Component
@@ -107,23 +99,8 @@ const UserMenu: React.FC<UserMenuProps> = ({
       onClick={handleLogout}
       onMouseEnter={() => setIsUserButtonHovered(true)}
       onMouseLeave={() => setIsUserButtonHovered(false)}
-      className="user-pill no-print"
+      className={`user-pill no-print ${isUserButtonHovered ? 'is-danger' : ''}`}
       aria-label={t.logoutConfirm || 'Logout'}
-      style={{
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '8px',
-        padding: isUserButtonHovered ? '8px 16px' : '8px 12px',
-        borderRadius: '32px',
-        backgroundColor: isUserButtonHovered ? 'var(--accent-red)' : 'var(--surface)',
-        border: '1px solid var(--border)',
-        color: isUserButtonHovered ? 'white' : 'var(--text-primary)',
-        fontSize: '0.9rem', 
-        fontWeight: '500', 
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        whiteSpace: 'nowrap'
-      }}
     >
       <User size={16} />
       <span className="user-name-text">{user.displayName || user.email?.split('@')[0] || 'User'}</span>
@@ -176,10 +153,17 @@ const Header: React.FC<HeaderProps> = ({
   t
 }) => {
   return (
-    <header className={`app-header ${!isHomePage && isScrolled ? 'sticky-scrolled' : ''}`}>
-      <div className="logo-container" onClick={handleHomeClick} role="button" tabIndex={0}>
-        <div className="logo-image" />
-        <h1>nextwiki</h1>
+    <header className={`app-header ${isHomePage ? 'is-home' : ''} ${!isHomePage && isScrolled ? 'sticky-scrolled' : ''}`}>
+      <div
+        className="logo-container"
+        onClick={handleHomeClick}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleHomeClick(); } }}
+        role="button"
+        tabIndex={0}
+        aria-label="nextwiki"
+      >
+        <div className="logo-image" aria-hidden="true" />
+        <span className="logo-wordmark">nextwiki</span>
       </div>
 
       {/* Compact search bar that appears when scrolled */}
@@ -314,6 +298,7 @@ interface ArticleViewProps {
   imageUrl: string | null;
   imageError: string | null;
   generationTime: number | null;
+  isScrolled: boolean;
   history: string[];
   handleTopicChange: (topic: string) => void;
   handleDeleteHistoryItem: (topic: string) => void;
@@ -340,6 +325,7 @@ const ArticleView: React.FC<ArticleViewProps> = ({
   imageUrl,
   imageError,
   generationTime,
+  isScrolled,
   history,
   handleTopicChange,
   handleDeleteHistoryItem,
@@ -370,145 +356,126 @@ const ArticleView: React.FC<ArticleViewProps> = ({
         <SearchBar onSearch={handleTopicChange} isLoading={isLoading} placeholder={t.search} />
       </div>
 
-      <main>
+      <main className="article-page">
         <HistoryDisplay history={history} onHistoryClick={handleTopicChange} onDeleteHistoryItem={handleDeleteHistoryItem} title={t.recent} />
 
-        <ImageDisplay imageUrl={imageUrl} topic={currentTopic} isLoading={isLoading && !imageUrl} error={imageError} />
+        <article className="article">
+          <div className="article-body">
+            <h1 className="article-title">
+              {currentTopic}
+            </h1>
 
-        <div>
-          <h2 style={{ marginBottom: '1rem', textTransform: 'capitalize' }}>
-            {currentTopic}
-          </h2>
+            {error && (
+              <div className="error-box" role="alert">
+                <p className="error-title">An Error Occurred</p>
+                <p className="error-detail">{error}</p>
+              </div>
+            )}
 
-          {error && (
-            <div className="error-box" role="alert">
-              <p style={{ margin: 0 }}>An Error Occurred</p>
-              <p style={{ marginTop: '0.5rem', margin: 0 }}>{error}</p>
-            </div>
-          )}
+            {isLoading && content.length === 0 && !error && <LoadingSkeleton />}
 
-          {isLoading && content.length === 0 && !error && <LoadingSkeleton />}
-
-          {content.length > 0 && !error && (
-            <>
-              <ContentDisplay
-                content={content}
-                isLoading={isLoading || isExtending}
-                onWordClick={handleTopicChange}
-                isExtending={isExtending}
-              />
-              {!isLoading && !isExtending && (
-                <>
-                  <div className="action-buttons">
-                    <button
-                      onClick={handleRetry}
-                      className="more-button"
-                      aria-label={t.retry}
-                    >
-                      <RefreshCw size={16} />
-                      {t.retry}
-                    </button>
-                    <button
-                      onClick={handleExtendContent}
-                      className="more-button"
-                      disabled={isExtending}
-                      aria-label={isExtending ? t.extending : t.more}
-                    >
-                      <Plus size={16} />
-                      {isExtending ? t.extending : t.more}
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (isAskMoreOpen) {
-                          setIsAskMoreOpen(false);
-                          setAskMoreQuery('');
-                        } else {
-                          setIsAskMoreOpen(true);
-                        }
-                      }}
-                      className="more-button"
-                      aria-label={isAskMoreOpen ? t.close : t.askMore}
-                      style={isAskMoreOpen ? {
-                        backgroundColor: 'var(--text-primary)',
-                        color: 'var(--bg)',
-                        borderColor: 'var(--text-primary)',
-                      } : {}}
-                    >
-                      {isAskMoreOpen ? <X size={16} /> : <MessageCircle size={16} />}
-                      {isAskMoreOpen ? t.close : t.askMore}
-                    </button>
-                    <button
-                      onClick={() => setIsShareMenuOpen(true)}
-                      className="share-button"
-                      aria-label={t.share}
-                    >
-                      <Share2 size={16} />
-                      {t.share}
-                    </button>
-                  </div>
-
-                  {isAskMoreOpen && (
-                    <div style={{ marginTop: '1rem', animation: 'fadeIn 0.3s ease' }}>
-                      <form
-                        onSubmit={handleSubmit}
-                        style={{
-                          display: 'flex',
-                          gap: '0.5rem',
-                          alignItems: 'center',
-                          padding: '0.5rem 0.75rem',
-                          backgroundColor: 'var(--surface)',
-                          border: '1px solid var(--border)',
-                          borderRadius: '32px',
-                        }}
+            {content.length > 0 && !error && (
+              <>
+                <ContentDisplay
+                  content={content}
+                  isLoading={isLoading || isExtending}
+                  onWordClick={handleTopicChange}
+                  isExtending={isExtending}
+                />
+                {!isLoading && !isExtending && (
+                  <>
+                    <div className="action-buttons">
+                      <button
+                        onClick={handleRetry}
+                        className="more-button"
+                        aria-label={t.retry}
                       >
-                        <MessageCircle size={18} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
-                        <input
-                          type="text"
-                          value={askMoreQuery}
-                          onChange={(e) => setAskMoreQuery(e.target.value)}
-                          placeholder={t.askMorePlaceholder}
-                          disabled={isAskMoreLoading}
-                          style={{
-                            flex: 1,
-                            padding: '0.5rem',
-                            fontSize: '1rem',
-                            color: 'inherit',
-                            border: 'none',
-                            backgroundColor: 'transparent',
-                            outline: 'none',
-                          }}
-                          autoFocus
-                          aria-label={t.askMorePlaceholder}
-                        />
-                      </form>
-                      {(askMoreResponse || isAskMoreLoading) && (
-                        <div style={{
-                          marginTop: '0.75rem',
-                          padding: '1rem',
-                          backgroundColor: 'var(--surface)',
-                          border: '1px solid var(--border)',
-                          borderRadius: '32px',
-                          fontSize: '1rem',
-                          lineHeight: '1.6',
-                          animation: 'fadeIn 0.3s ease',
-                        }}>
-                          {askMoreResponse}
-                          {isAskMoreLoading && <span className="blinking-cursor">|</span>}
-                        </div>
-                      )}
+                        <RefreshCw size={18} />
+                        <span>{t.retry}</span>
+                      </button>
+                      <button
+                        onClick={handleExtendContent}
+                        className="more-button"
+                        disabled={isExtending}
+                        aria-label={isExtending ? t.extending : t.more}
+                      >
+                        <Plus size={18} />
+                        <span>{isExtending ? t.extending : t.more}</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (isAskMoreOpen) {
+                            setIsAskMoreOpen(false);
+                            setAskMoreQuery('');
+                          } else {
+                            setIsAskMoreOpen(true);
+                          }
+                        }}
+                        className={`more-button ${isAskMoreOpen ? 'is-active' : ''}`}
+                        aria-label={isAskMoreOpen ? t.close : t.askMore}
+                        aria-pressed={isAskMoreOpen}
+                      >
+                        {isAskMoreOpen ? <X size={18} /> : <MessageCircle size={18} />}
+                        <span>{isAskMoreOpen ? t.close : t.askMore}</span>
+                      </button>
+                      <button
+                        onClick={() => setIsShareMenuOpen(true)}
+                        className="share-button"
+                        aria-label={t.share}
+                      >
+                        <Share2 size={18} />
+                        <span>{t.share}</span>
+                      </button>
                     </div>
-                  )}
-                </>
-              )}
-            </>
-          )}
 
-          {!isLoading && !error && content.length === 0 && (
-            <div style={{ color: 'var(--text-secondary)', padding: '2rem 0' }}>
-              <p>Content could not be generated.</p>
-            </div>
-          )}
-        </div>
+                    {isAskMoreOpen && (
+                      <div className="ask-more">
+                        <form onSubmit={handleSubmit} className="ask-form">
+                          <MessageCircle size={18} />
+                          <input
+                            type="text"
+                            value={askMoreQuery}
+                            onChange={(e) => setAskMoreQuery(e.target.value)}
+                            placeholder={t.askMorePlaceholder}
+                            disabled={isAskMoreLoading}
+                            className="ask-input"
+                            autoFocus
+                            enterKeyHint="send"
+                            aria-label={t.askMorePlaceholder}
+                          />
+                          <button
+                            type="submit"
+                            className="ask-send"
+                            disabled={isAskMoreLoading || !askMoreQuery.trim()}
+                            aria-label={t.askMore}
+                          >
+                            <ArrowUp size={20} />
+                          </button>
+                        </form>
+                        {(askMoreResponse || isAskMoreLoading) && (
+                          <div className="ask-answer">
+                            {askMoreResponse}
+                            {isAskMoreLoading && <span className="blinking-cursor">|</span>}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+
+            {!isLoading && !error && content.length === 0 && (
+              <div className="empty-state">
+                <p>Content could not be generated.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="article-media">
+            <ImageDisplay imageUrl={imageUrl} topic={currentTopic} isLoading={isLoading && !imageUrl} error={imageError} />
+          </div>
+        </article>
       </main>
     </>
   );
@@ -526,11 +493,13 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ t, generationTime, isMobile }) => {
   return (
-    <footer className="sticky-footer no-print">
-      <p className="footer-text" style={{ margin: 0 }}>
+    <footer className="app-footer no-print">
+      <p className="footer-text">
         {t.madeBy} <a href="http://lollo.dpdns.org" target="_blank" rel="noopener noreferrer">lollo21</a>
-        {!isMobile && ` \u00b7 ${t.generatedBy}`}
-        {generationTime && ` \u00b7 ${Math.round(generationTime)}ms`}
+      </p>
+      <p className="footer-meta">
+        {!isMobile && <span>{t.generatedBy}</span>}
+        {generationTime && <span className="footer-time">{Math.round(generationTime)}ms</span>}
       </p>
     </footer>
   );
@@ -609,6 +578,7 @@ const App: React.FC = () => {
     document.documentElement.classList.toggle('light-theme', theme === 'light');
     document.documentElement.classList.toggle('dark-theme', theme === 'dark');
     document.documentElement.setAttribute('data-theme', theme);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0A111A' : '#EAEFF1');
     localStorage.setItem('theme', theme);
   }, [theme]);
 
@@ -1067,6 +1037,7 @@ const App: React.FC = () => {
         imageUrl={imageUrl}
         imageError={imageError}
         generationTime={generationTime}
+        isScrolled={isScrolled}
         history={history}
         handleTopicChange={handleTopicChange}
         handleDeleteHistoryItem={handleDeleteHistoryItem}
