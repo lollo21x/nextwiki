@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { ArrowRight } from 'lucide-react';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -115,6 +116,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           aria-label="Search for a topic"
           disabled={isLoading}
           autoComplete="off"
+          enterKeyHint="search"
           onKeyDown={handleKeyDown}
           style={{
             transition: 'filter 0.3s ease, opacity 0.3s ease',
@@ -137,10 +139,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
         )}
         <button
           type="submit"
-          className="sr-only"
+          className="search-submit"
           disabled={isLoading || !query.trim()}
+          aria-label="Search"
         >
-          Search
+          <ArrowRight aria-hidden="true" />
         </button>
       </form>
     </div>
