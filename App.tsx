@@ -194,17 +194,17 @@ const Header: React.FC<HeaderProps> = ({
           </button>
         )}
         
-        <UserMenu
-          user={user}
-          isMobile={isMobile}
-          isUserButtonHovered={isUserButtonHovered}
-          setIsUserButtonHovered={setIsUserButtonHovered}
-          setIsLogoutModalOpen={setIsLogoutModalOpen}
-          handleLogout={handleLogout}
-          t={t}
-        />
-        
-        {user ? null : (
+        {user ? (
+          <UserMenu
+            user={user}
+            isMobile={isMobile}
+            isUserButtonHovered={isUserButtonHovered}
+            setIsUserButtonHovered={setIsUserButtonHovered}
+            setIsLogoutModalOpen={setIsLogoutModalOpen}
+            handleLogout={handleLogout}
+            t={t}
+          />
+        ) : (
           <button 
             onClick={() => setIsAuthModalOpen(true)} 
             className="user-toggle no-print"
