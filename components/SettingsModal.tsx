@@ -32,6 +32,15 @@ const ACCENT_COLORS = [
   { id: 'purple', label: 'Purple', value: 'purple' },
 ];
 
+const GENERATION_MODES: { id: GenerationMode; label: string }[] = [
+  { id: 'encyclopedia', label: 'Encyclopedia' },
+  { id: 'eli5', label: 'Like I\'m 5' },
+  { id: 'practicalExamples', label: 'Examples' },
+  { id: 'stepByStep', label: 'Step by step' },
+  { id: 'summary', label: 'Summary' },
+  { id: 'funFacts', label: 'Fun facts' },
+];
+
 const CheckmarkIcon: React.FC = () => (
   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M5 13L9 17L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -208,8 +217,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         {/* Header */}
         <div className="modal-header">
           <h2 id="settings-modal-title" className="modal-title">
-            <Settings size={20} />
-            {translations.accentColor}
+            <Settings size={22} />
+            Settings
           </h2>
           <button
             onClick={onClose}
@@ -253,16 +262,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* Generation Mode Section */}
           <div className="mb-lg">
             <h3 className="modal-section-title">Generation Mode</h3>
-            <div className="custom-select-container">
-              <button
-                type="button"
-                className="custom-select-trigger"
-                onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-                aria-label="Select generation mode"
-              >
-                <span>{selectedGenerationMode}</span>
-                <ChevronDown size={16} className="custom-select-arrow" />
-              </button>
+            <div className="mode-options" role="radiogroup" aria-label="Generation mode">
+              {GENERATION_MODES.map((mode) => (
+                <button
+                  key={mode.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selectedGenerationMode === mode.id}
+                  className={`mode-chip ${selectedGenerationMode === mode.id ? 'active' : ''}`}
+                  onClick={() => setSelectedGenerationMode(mode.id)}
+                >
+                  {mode.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -274,7 +286,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             className="btn btn-secondary"
             onClick={onClose}
           >
-            Cancel
+            {translations.close || 'Cancel'}
           </button>
           <button
             type="button"
