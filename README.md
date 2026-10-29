@@ -14,7 +14,7 @@ NextWiki 2.0 is a completely redesigned, professional-grade knowledge exploratio
 - **Search History**: Keep track of your recent searches
 
 ### New in 2.0
-- **Complete Design Overhaul**: Modern, professional UI with CSS variables and design system
+- **"Bibliotheca" Design**: a place for culture — frontispiece homepage, engraved rules, article as a lemma with a mounted plate
 - **Enhanced Responsive Design**: Perfect experience on mobile, tablet, and desktop
 - **Improved Accessibility**: WCAG 2.1 AA compliant with keyboard navigation, screen reader support, and focus management
 - **Performance Optimizations**: Faster loading, better caching, and optimized bundle size
@@ -34,15 +34,15 @@ NextWiki 2.0 is a completely redesigned, professional-grade knowledge exploratio
 ## Design System
 
 ### Colors
-- Primary color palette with semantic naming
-- Multiple accent color options (blue, green, yellow, pink, orange, red, purple)
-- Light and dark theme support
+- Parchment (light) and "library at night" (dark), with paper grain
+- Accent colors are named after pigments: oxblood (default), lapis, malachite, gold leaf, rose madder, terracotta, cinnabar, tyrian purple
 - Automatic theme detection based on system preferences
 
 ### Typography
-- System font stack for optimal performance
-- Responsive font sizes
-- Proper line heights and spacing
+- **Cinzel**: inscriptions (wordmark, labels, buttons)
+- **Cormorant Garamond**: display (titles, search, headings)
+- **EB Garamond**: reading text, with an illuminated initial
+- Times-style serif fallbacks for every script
 
 ### Components
 - Reusable, accessible UI components
