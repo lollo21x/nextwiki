@@ -279,7 +279,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, langParam
               placeholder={t.email}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              icon={<Mail size={18} color="var(--text-tertiary)" />}
+              icon={<Mail size={18} color="var(--ink-3)" />}
               disabled={isLoading}
             />
             
@@ -288,7 +288,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, langParam
               placeholder={t.password}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              icon={<Lock size={18} color="var(--text-tertiary)" />}
+              icon={<Lock size={18} color="var(--ink-3)" />}
               disabled={isLoading}
               showPasswordToggle
               showPassword={showPassword}
@@ -319,7 +319,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, langParam
                 placeholder={t.firstName}
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                icon={<UserIcon size={18} color="var(--text-tertiary)" />}
+                icon={<UserIcon size={18} color="var(--ink-3)" />}
                 disabled={isLoading}
               />
               <AuthInput
@@ -327,7 +327,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, langParam
                 placeholder={t.lastName}
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                icon={<UserIcon size={18} color="var(--text-tertiary)" />}
+                icon={<UserIcon size={18} color="var(--ink-3)" />}
                 disabled={isLoading}
               />
             </div>
@@ -337,7 +337,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, langParam
               placeholder={t.email}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              icon={<Mail size={18} color="var(--text-tertiary)" />}
+              icon={<Mail size={18} color="var(--ink-3)" />}
               disabled={isLoading}
             />
             
@@ -346,7 +346,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, langParam
               placeholder={t.password}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              icon={<Lock size={18} color="var(--text-tertiary)" />}
+              icon={<Lock size={18} color="var(--ink-3)" />}
               disabled={isLoading}
               showPasswordToggle
               showPassword={showPassword}
@@ -358,7 +358,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, langParam
               placeholder={t.confirmPassword}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              icon={<Lock size={18} color="var(--text-tertiary)" />}
+              icon={<Lock size={18} color="var(--ink-3)" />}
               disabled={isLoading}
               error={password !== confirmPassword && confirmPassword ? t.passwordsDoNotMatch : undefined}
             />
