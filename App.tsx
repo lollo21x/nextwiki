@@ -17,7 +17,7 @@ import { AuthModal } from './components/AuthModal';
 import ShareMenu from './components/ShareMenu';
 import { useAuth } from './src/hooks/useAuth';
 import { translations, LanguageCode, languageNameMap } from './utils/translations';
-import { User, LogOut, Info, Plus, Share2, ArrowLeft, RefreshCw, MessageCircle, X, ArrowUp, Sun, Moon, Settings as SettingsIcon } from 'lucide-react';
+import { User, LogOut, Info, ScrollText, Share2, ArrowLeft, RefreshCw, Feather, X, ArrowUp, Sun, Moon, Settings as SettingsIcon } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from './src/services/firebase';
 
@@ -34,20 +34,83 @@ const getTopicFromURL = (): string => {
 };
 
 // ===================================================================
-// Floating Background Shapes Component
+// Decorative Components: armillary backdrop, temple pediment, rule
 // ===================================================================
 
-const FloatingShapes: React.FC = () => (
-  <div className="floating-shapes" aria-hidden="true">
-    <div className="floating-shape shape-1" />
-    <div className="floating-shape shape-2" />
-    <div className="floating-shape shape-3" />
-    <div className="floating-shape shape-4" />
-    <div className="floating-shape shape-5" />
-    <div className="floating-shape shape-6" />
-    <div className="floating-shape shape-7" />
-    <div className="floating-shape shape-8" />
-    <div className="floating-shape shape-9" />
+const polar = (radius: number, degrees: number) => {
+  const a = (degrees * Math.PI) / 180;
+  return { x: +(Math.cos(a) * radius).toFixed(2), y: +(Math.sin(a) * radius).toFixed(2) };
+};
+
+/** An engraved armillary sphere that turns very slowly behind the homepage. */
+const Backdrop: React.FC = () => (
+  <div className="backdrop" aria-hidden="true">
+    <svg className="backdrop-sphere" viewBox="-500 -500 1000 1000" fill="none" stroke="currentColor" focusable="false">
+      <circle r="488" strokeWidth="1.4" />
+      <circle r="466" strokeWidth="0.6" />
+      <circle r="380" strokeWidth="0.8" />
+      <circle r="300" strokeWidth="0.6" />
+      <circle r="214" strokeWidth="1" />
+      <circle r="130" strokeWidth="0.6" />
+      <circle r="52" strokeWidth="0.8" />
+      {Array.from({ length: 120 }, (_, i) => {
+        const long = i % 5 === 0;
+        const a = polar(long ? 444 : 454, i * 3);
+        const b = polar(466, i * 3);
+        return <line key={`t${i}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} strokeWidth={long ? 1 : 0.6} />;
+      })}
+      {Array.from({ length: 12 }, (_, i) => {
+        const a = polar(52, i * 30);
+        const b = polar(380, i * 30);
+        return <line key={`s${i}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} strokeWidth="0.5" />;
+      })}
+      <polygon points="300,0 0,300 -300,0 0,-300" strokeWidth="0.8" />
+      <polygon points="212,212 -212,212 -212,-212 212,-212" strokeWidth="0.8" />
+      {Array.from({ length: 12 }, (_, i) => {
+        const c = polar(418, i * 30 + 15);
+        return <circle key={`d${i}`} cx={c.x} cy={c.y} r="4" fill="currentColor" stroke="none" />;
+      })}
+      <g className="ring-b" strokeWidth="0.9">
+        <ellipse rx="430" ry="150" transform="rotate(-23.5)" />
+        <ellipse rx="430" ry="150" transform="rotate(23.5)" />
+        <ellipse rx="430" ry="38" />
+      </g>
+    </svg>
+  </div>
+);
+
+/** A line-drawn temple front. Each stroke is traced in on first paint. */
+const Pediment: React.FC = () => {
+  const columns = [30, 66, 102, 138, 174, 210];
+  const dentils = Array.from({ length: 38 }, (_, i) => `M${12 + i * 6} 46V50`).join('');
+  return (
+    <svg viewBox="0 0 240 118" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <path className="trace" pathLength={1} d="M8 41L120 7L232 41Z" />
+      <path className="trace" pathLength={1} d="M28 37L120 15L212 37" strokeWidth="0.9" />
+      <circle className="trace" pathLength={1} cx="120" cy="28" r="4.5" strokeWidth="1" />
+      <path className="trace" pathLength={1} d="M112 7C114 0 126 0 128 7" strokeWidth="1.1" />
+      <path className="trace" pathLength={1} d="M5 41H235V50H5Z" />
+      <path className="trace" pathLength={1} d={dentils} strokeWidth="0.8" />
+      {columns.map((x) => (
+        <React.Fragment key={x}>
+          <path className="trace trace-late" pathLength={1} d={`M${x - 10} 53H${x + 10}`} />
+          <path className="trace trace-late" pathLength={1} d={`M${x - 7} 56H${x + 7}`} strokeWidth="1" />
+          <path className="trace trace-late" pathLength={1} d={`M${x - 6} 56V98M${x + 6} 56V98`} />
+          <path className="trace trace-late" pathLength={1} d={`M${x} 58V96`} strokeWidth="0.6" />
+          <path className="trace trace-late" pathLength={1} d={`M${x - 9} 98H${x + 9}M${x - 10} 101H${x + 10}`} />
+        </React.Fragment>
+      ))}
+      <path className="trace trace-late" pathLength={1} d="M4 105H236" />
+      <path className="trace trace-late" pathLength={1} d="M0 109.5H240" />
+      <path className="trace trace-late" pathLength={1} d="M-4 114H244" />
+    </svg>
+  );
+};
+
+/** Engraved rule with a lozenge. */
+const Ornament: React.FC = () => (
+  <div className="ornament" aria-hidden="true">
+    <span className="ornament-gem" />
   </div>
 );
 
@@ -256,20 +319,31 @@ const Homepage: React.FC<HomepageProps> = ({
 }) => {
   return (
     <div className="homepage">
-      <FloatingShapes />
-      
-      <div className="homepage-brand">
-        <div className="homepage-logo" aria-label="NextWiki Logo" role="img" />
-        <h1 className="homepage-title">nextwiki</h1>
-      </div>
+      <Backdrop />
 
-      <div className="homepage-search-container">
-        <SearchBar
-          onSearch={handleTopicChange}
-          isLoading={false}
-          placeholder={t.search}
-          typingWords={t.placeholderPool}
-        />
+      <div className="homepage-frame">
+        <div className="homepage-brand">
+          <div className="homepage-logo" aria-label="NextWiki Logo" role="img">
+            <Pediment />
+          </div>
+          <h1 className="homepage-title">next<span className="title-accent">wiki</span></h1>
+          <p className="homepage-tenets" aria-hidden="true">
+            <span>Scientia</span><i /><span>Sapientia</span><i /><span>Ratio</span>
+          </p>
+        </div>
+
+        <Ornament />
+
+        <div className="homepage-search-container">
+          <SearchBar
+            onSearch={handleTopicChange}
+            isLoading={false}
+            placeholder={t.search}
+            typingWords={t.placeholderPool}
+          />
+        </div>
+
+        <p className="homepage-motto" aria-hidden="true">Sapere aude</p>
       </div>
 
       {history.length > 0 && (
@@ -360,10 +434,16 @@ const ArticleView: React.FC<ArticleViewProps> = ({
         <HistoryDisplay history={history} onHistoryClick={handleTopicChange} onDeleteHistoryItem={handleDeleteHistoryItem} title={t.recent} />
 
         <article className="article">
-          <div className="article-body">
+          <header className="article-head" key={currentTopic}>
+            <span className="article-kicker caps" aria-hidden="true">Lemma</span>
             <h1 className="article-title">
               {currentTopic}
             </h1>
+            <Ornament />
+          </header>
+
+          <div className="article-grid">
+          <div className="article-body">
 
             {error && (
               <div className="error-box" role="alert">
@@ -399,7 +479,7 @@ const ArticleView: React.FC<ArticleViewProps> = ({
                         disabled={isExtending}
                         aria-label={isExtending ? t.extending : t.more}
                       >
-                        <Plus size={18} />
+                        <ScrollText size={18} />
                         <span>{isExtending ? t.extending : t.more}</span>
                       </button>
                       <button
@@ -415,7 +495,7 @@ const ArticleView: React.FC<ArticleViewProps> = ({
                         aria-label={isAskMoreOpen ? t.close : t.askMore}
                         aria-pressed={isAskMoreOpen}
                       >
-                        {isAskMoreOpen ? <X size={18} /> : <MessageCircle size={18} />}
+                        {isAskMoreOpen ? <X size={18} /> : <Feather size={18} />}
                         <span>{isAskMoreOpen ? t.close : t.askMore}</span>
                       </button>
                       <button
@@ -431,7 +511,7 @@ const ArticleView: React.FC<ArticleViewProps> = ({
                     {isAskMoreOpen && (
                       <div className="ask-more">
                         <form onSubmit={handleSubmit} className="ask-form">
-                          <MessageCircle size={18} />
+                          <Feather size={18} />
                           <input
                             type="text"
                             value={askMoreQuery}
@@ -472,8 +552,9 @@ const ArticleView: React.FC<ArticleViewProps> = ({
             )}
           </div>
 
-          <div className="article-media">
+          <aside className="article-media">
             <ImageDisplay imageUrl={imageUrl} topic={currentTopic} isLoading={isLoading && !imageUrl} error={imageError} />
+          </aside>
           </div>
         </article>
       </main>
@@ -578,7 +659,7 @@ const App: React.FC = () => {
     document.documentElement.classList.toggle('light-theme', theme === 'light');
     document.documentElement.classList.toggle('dark-theme', theme === 'dark');
     document.documentElement.setAttribute('data-theme', theme);
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0A111A' : '#EAEFF1');
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#151210' : '#F2EBDA');
     localStorage.setItem('theme', theme);
   }, [theme]);
 
@@ -591,6 +672,7 @@ const App: React.FC = () => {
   // Language management
   useEffect(() => {
     localStorage.setItem('language', language);
+    document.documentElement.setAttribute('lang', language);
   }, [language]);
 
   // Generation mode management
