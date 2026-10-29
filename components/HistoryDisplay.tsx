@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import React from 'react';
-import { X, Clock } from 'lucide-react';
+import { X, BookMarked } from 'lucide-react';
 
 interface HistoryDisplayProps {
   history: string[];
@@ -54,8 +54,8 @@ const HistoryDisplay: React.FC<HistoryDisplayProps> = ({
   return (
     <div className="history-container" aria-label="Search history">
       <h3 className="history-title">
-        <Clock size={18} />
-        {title}
+        <BookMarked size={18} aria-hidden="true" />
+        <span>{title}</span>
       </h3>
       <div className="history-items" role="list">
         {history.map((item) => (
